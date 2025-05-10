@@ -36,11 +36,14 @@
   <div id="extracted">📊 날짜 / 합계 금액 추출 결과</div>
 
 
-  <canvas id="processedCanvas"></canvas>
+  <canvas id="processedCanvas"></canvas>  <!-- 프로세싱된 이미지 출력을 위한 임시 태그 -->
+  <canvas id="temp" display = "none"></canvas>
 
 
   <script async src="https://docs.opencv.org/3.4.0/opencv.js" type="text/javascript"></script>
-  <script>
+
+  <script src = "processing.js"></script>
+  <!--
     const upload = document.getElementById('upload');
     const preview = document.getElementById('preview');
     const result = document.getElementById('result');
@@ -82,12 +85,12 @@
 
       //cv.imshow(processedCanvas, src)
 
-      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);    // gray 변경
+      //cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);    // gray 변경
       //cv.bilateralFilter(gray, blurred, 9, 75, 75); // 블러 적용
       //const kernel = cv.matFromArray(3, 3, cv.CV_32F, [-1, -1, -1, -1, 9, -1, -1, -1, -1]);  // 샤프닝 적용용
       //cv.filter2D(blurred, sharp, cv.CV_8U, kernel); // 필터 적용용
       //cv.threshold(gray, dst, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);  // 이진 마스크 생성성
-      cv.imshow(processedCanvas, gray)
+      cv.imshow(processedCanvas, src)
 
       src.delete();
       dst.delete();
@@ -134,6 +137,6 @@
         extracted.innerText = '❌ 추출 실패';
       });
     }
-  </script>
+    -->
 </body>
 </html>
