@@ -1,3 +1,105 @@
+# 영수증 OCR 백엔드 서비스
+
+영수증을 OCR 기술로 인식하여 소비패턴을 파악하는 서비스의 백엔드 API 서버
+
+## 기술 스택
+
+- Node.js
+- Express
+- MySQL
+
+## 시작하기
+
+### 필수 조건
+
+- Node.js (v14 이상)
+- MySQL 서버
+
+### 설치
+
+1. 저장소를 클론합니다.
+   ```
+   git clone <저장소 URL>
+   cd project-OS-back
+   ```
+
+2. 의존성 패키지를 설치합니다.
+   ```
+   npm install
+   ```
+
+3. 환경 변수를 설정합니다.
+   ```
+   PORT=3000
+   DB_HOST=localhost
+   DB_USER=root
+   DB_PASSWORD=PASSWORD
+   DB_NAME=receipts_app
+   ```
+
+4. 서버를 실행합니다.
+   ```
+   npm start
+   ```
+
+## 데이터베이스 구조
+
+### receipts 테이블
+- id: 영수증 고유 ID
+- user_id: 사용자 ID
+- date: 영수증 날짜
+- total_amount: 총 금액
+- created_at: 생성 시간
+- updated_at: 수정 시간
+
+### items 테이블
+- id: 품목 고유 ID
+- receipt_id: 영수증 ID (외래키)
+- name: 품목명
+- price: 가격
+- quantity: 수량
+- created_at: 생성 시간
+- updated_at: 수정 시간
+- category: 카테고리
+
+## API 엔드포인트
+
+### 영수증 API
+
+- `GET /api/receipts`: 모든 영수증 조회
+- `GET /api/receipts/:id`: 특정 영수증 조회
+- `GET /api/receipts/date/:date`: 특정 날짜 이후의 영수증 조회
+- `GET /api/receipts/amount/:amount`: 특정 금액 이상의 영수증 조회
+- `POST /api/receipts`: 새 영수증 추가
+- `PUT /api/receipts/:id`: 영수증 수정
+- `DELETE /api/receipts/:id`: 영수증 삭제
+
+### 품목 API
+
+- `GET /api/items`: 모든 품목 조회
+- `GET /api/items/:id`: 특정 품목 조회
+- `GET /api/items/receipt/:receiptId`: 특정 영수증의 모든 품목 조회
+- `GET /api/items/price/:price`: 특정 가격 이상의 품목 조회
+- `GET /api/items/category/:category`: 특정 카테고리의 품목 조회
+- `GET /api/items/name/:name`: 특정 이름을 가진 품목 조회 (부분 일치)
+- `GET /api/items/created-after/:date`: 특정 날짜 이후 생성된 품목 조회
+- `POST /api/items`: 새 품목 추가
+- `POST /api/items/batch`: 여러 품목 한번에 추가
+- `PUT /api/items/:id`: 품목 수정
+- `DELETE /api/items/:id`: 품목 삭제
+- `DELETE /api/items/receipt/:receiptId`: 특정 영수증의 모든 품목 삭제
+
+### 통계 API
+
+- `GET /api/stats/category`: 카테고리별 지출 통계
+  - 쿼리 파라미터: startDate, endDate, userId
+- `GET /api/stats/time`: 시간별 지출 통계
+  - 쿼리 파라미터: groupBy (day, month, year), startDate, endDate, userId
+- `GET /api/stats/top-items`: 가장 많이 구매한 품목 통계
+  - 쿼리 파라미터: limit, startDate, endDate, userId
+- `GET /api/stats/average`: 평균 지출 통계
+  - 쿼리 파라미터: groupBy (day, month, category), startDate, endDate, userId
+
 # project-OS-back
 ---
 ## 박지성 
