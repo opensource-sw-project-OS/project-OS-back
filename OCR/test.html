@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>날짜/금액 추출</title>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #preview { max-width: 300px; margin-top: 10px; display: none; }
+    #result, #categoryOutput, #extracted { white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <h2>🧾 지출 사진에서 날짜/금액 추출</h2>
+
+  <input type="file" id="upload" accept="image/*" />
+  <br><br>
+  <img id="preview" />
+
+  <br>
+  <label>분야 선택:</label>
+  <select id="category">
+    <option value="식당">식당</option>
+    <option value="카페">카페</option>
+    <option value="여가">여가</option>
+    <option value="쇼핑">쇼핑</option>
+    <option value="교통">교통</option>
+    <option value="기타">기타</option>
+  </select>
+
+  <br><br>
+  <button onclick="runOCR()">OCR 실행</button>
+
+  <div id="categoryOutput">선택 분야: 없음</div>
+  <div id="result">OCR 결과</div>
+  <div id="extracted">📊 날짜 / 합계 금액 추출 결과</div>
+
+
+  <canvas id="processedCanvas"></canvas>  <!-- 프로세싱된 이미지 출력을 위한 임시 태그 -->
+  <canvas id="temp" display = "none"></canvas>
+
+
+  <script async src="https://docs.opencv.org/3.4.0/opencv.js" type="text/javascript"></script>
+
+  <script src = "processing.js"></script>
+  <!--
+    const upload = document.getElementById('upload');
+    const preview = document.getElementById('preview');
+    const result = document.getElementById('result');
+    const categoryOutput = document.getElementById('categoryOutput');
+    const extracted = document.getElementById('extracted');
+
+    let imageData = null;
+    let proc_image = null;
+
+    upload.addEventListener('change', () => {
+      const file = upload.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        imageData = reader.result;
+        preview.src = imageData;
+        preview.style.display = 'block';
+        console.log(imageData);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    const processedCanvas = document.getElementById('processedCanvas');
+    function imgProc(imageData) {   
+        var Module = {
+            onRuntimeInitialized() {
+                console.log('OpenCV.js is ready.');
+            }
+        };
+      const canvasInput = imageData;
+      
+
+      let src = cv.imread(preview);
+      let gray = new cv.Mat();
+      let dst = new cv.Mat();
+      let blurred = new cv.Mat();
+      let sharp = new cv.Mat();
+
+      //cv.imshow(processedCanvas, src)
+
+      //cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);    // gray 변경
+      //cv.bilateralFilter(gray, blurred, 9, 75, 75); // 블러 적용
+      //const kernel = cv.matFromArray(3, 3, cv.CV_32F, [-1, -1, -1, -1, 9, -1, -1, -1, -1]);  // 샤프닝 적용용
+      //cv.filter2D(blurred, sharp, cv.CV_8U, kernel); // 필터 적용용
+      //cv.threshold(gray, dst, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);  // 이진 마스크 생성성
+      cv.imshow(processedCanvas, src)
+
+      src.delete();
+      dst.delete();
+      gray.delete();
+      blurred.delete();
+      sharp.delete();
+    }
+
+    function runOCR() {
+      const category = document.getElementById('category').value;
+
+      if (!imageData) {
+        alert("이미지를 먼저 업로드하세요.");
+        return;
+      }
+
+      imgProc(imageData);                                      // 추가한 부분
+
+      result.innerText = "OCR 인식 중";
+      categoryOutput.innerText = `선택 분야: ${category}`;
+      extracted.innerText = '날짜 / 합계 금액 추출 결과:\n(추출 중...)';
+
+      Tesseract.recognize(
+        processedCanvas,                                      // 추가한 부분
+        'kor',	// 한글 인식 설정
+        {
+          langPath: 'https://tessdata.projectnaptha.com/4.0.0/',
+          logger: m => console.log(m)
+        }
+      ).then(({ data: { text } }) => {
+        result.innerText = `📝 OCR 결과:\n\n${text}`;
+
+        // 날짜 정규식 추출 (예: yyyy.mm.dd 또는 yyyy/mm/dd)
+        const dateMatch = text.match(/\d{4}[.\-/]\d{1,2}[.\-/]\d{1,2}/);
+        const date = dateMatch ? dateMatch[0] : '날짜 미인식';
+
+        // '합계','총액','총합계' 뒤에 나오는 숫자 추출
+        const totalMatch = text.match(/(합계|총액|총합계)[^\d]*(₩?\s?\d{1,3}(,\d{3})*(원)?)/);
+        const amount = totalMatch ? totalMatch[2] : '금액 미인식';
+
+        extracted.innerText = `날짜: ${date}\n합계 금액: ${amount}`;
+      }).catch(err => {
+        result.innerText = `❌ 오류 발생: ${err.message}`;
+        extracted.innerText = '❌ 추출 실패';
+      });
+    }
+    -->
+</body>
+</html>
