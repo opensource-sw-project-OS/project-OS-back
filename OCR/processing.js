@@ -1,6 +1,5 @@
 // const script = document.createElement('script');
 // script.src = 'https://docs.opencv.org/3.4.0/opencv.js';
-
 const upload = document.getElementById('upload');
 const preview = document.getElementById('preview');
 const result = document.getElementById('result');
@@ -107,7 +106,91 @@ function applyGammaCorrection(srcMat, gamma) {
 
   return dst;
 }
+function fixMisreadDate(originalLine) {
+  const raw = originalLine.replace(/\s+/g, '');
+  let candidate = raw.replace(/(\d)7(\d)/g, '$1/$2');  // 7 → / 보정만 복사본에서 수행
 
+  // ✅ 1순위: '25/05/08' 형태 (정확히 25로 시작하는 날짜)
+  const match25 = candidate.match(/25[./]\d{2}[./]\d{2}/);
+  if (match25) return match25[0];
+
+  // ✅ 2순위: 앞에 숫자가 붙은 '0025/05/08' 같은 형태 → '25/05/08' 추출
+  const embedded25 = candidate.match(/\d*25[./]\d{2}[./]\d{2}/);
+  if (embedded25) {
+    const refined = embedded25[0].match(/25[./]\d{2}[./]\d{2}/);
+    if (refined) return refined[0];
+  }
+
+  // ✅ 3순위: 일반 날짜 포맷은 가장 마지막에 시도
+  const normal = candidate.match(/\d{2,4}[./]\d{2}[./]\d{2}/);
+  if (normal) return normal[0];
+
+  return null;
+}
+function fixSpacing(text) {
+  return text.replace(/\s+/g, '');
+}
+
+function normalizeNumber(text) {
+  return parseInt(text.replace(/[^\d]/g, ''), 10);
+}
+
+function analyzeReceipt(text) {
+  const lines = text.split(/\r?\n/);
+  const result = {
+    날짜: null,
+    총액: null,
+    물품: []
+  };
+
+  // 1. 날짜 우선 후보 탐색 (거래일시 등 키워드가 포함된 줄 우선)
+  for (const line of lines) {
+    const hasDateKeyword = /(거래\s*일시|일시|날짜)/i.test(line);
+    const fixed = fixMisreadDate(line);
+    if (hasDateKeyword && fixed) {
+      result.날짜 = fixed;
+      break;
+    }
+  }
+
+  // 2. 날짜가 아직 없다면 기존 방식으로 다시 탐색
+  if (!result.날짜) {
+    for (const line of lines) {
+      const fixed = fixMisreadDate(line);  // ✅ 여기도 fixMisreadDate 사용!
+      if (fixed) {
+        result.날짜 = fixed;
+        break;
+      }
+    }
+  }
+
+  // 3. 총액, 물품 추출
+  for (const line of lines) {
+    const noSpaceLine = fixSpacing(line);
+
+    // 총액 추출 (단어 일부 포함만 돼도 인정)
+    const hasTotalKeyword = /(금액|금맥|합계|항계|함계|합꼐|함꼐|많게|많계|총액|총금액|총금|계)/.test(noSpaceLine);
+    if (!result.총액 && hasTotalKeyword) {
+      const numberMatch = noSpaceLine.match(/\d[\d,.\s]*\d/);
+      if (numberMatch) {
+        result.총액 = normalizeNumber(numberMatch[0]);
+        continue;
+      }
+    }
+
+    // 물품명 추출
+    const hasPrice = /[0-9]{2,}/.test(noSpaceLine);
+    const hasHangul = /[가-힣]/.test(noSpaceLine);
+    if (hasPrice && hasHangul) {
+      const word = fixSpacing(line).replace(/[^가-힣A-Za-z]/g, '');
+      if (word.length > 1 && !result.물품.includes(word)) {
+        result.물품.push(word);
+      }
+    }
+  }
+
+  return result;
+}
 
 const { createWorker } = Tesseract;
 
@@ -128,6 +211,9 @@ function runOCR() {
     }
     ).then(({ data: { text } }) => {
     result.innerText = `📝 OCR 결과:\n\n${text}`;
+    let re = analyzeReceipt(text);
+    console.log(re);
+
 
     // 날짜 정규식 추출 (예: yyyy.mm.dd 또는 yyyy/mm/dd)
     const dateMatch = text.match(/\d{4}[.\-/]\d{1,2}[.\-/]\d{1,2}/);
