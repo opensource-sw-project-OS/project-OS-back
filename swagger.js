@@ -6,13 +6,13 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: '영수증 OCR 백엔드 API',
+      title: '감정-지출 기록 API',
       version: '1.0.0',
-      description: '영수증을 OCR 기술로 인식하여 소비패턴을 파악하는 서비스의 백엔드 API',
+      description: '사용자의 감정과 지출 정보를 기록하는 서비스의 백엔드 API',
     },
     servers: [
       {
-        url: 'http://localhost:3000',
+        url: 'http://localhost:8000',
         description: '개발 서버',
       },
     ],

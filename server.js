@@ -4,15 +4,15 @@ const dotenv = require('dotenv');
 const { specs, swaggerUi } = require('./swagger');
 
 // 라우터 불러오기
+const usersRouter = require('./routes/users');
 const receiptsRouter = require('./routes/receipts');
-const itemsRouter = require('./routes/items');
-const statsRouter = require('./routes/stats');
 
 // 환경변수 설정
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+// 명시적으로 포트 8000 사용
+const PORT = 8000;
 
 // 미들웨어 설정
 app.use(cors());
@@ -22,13 +22,12 @@ app.use(express.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, { explorer: true }));
 
 // 라우터 설정
+app.use('/api/users', usersRouter);
 app.use('/api/receipts', receiptsRouter);
-app.use('/api/items', itemsRouter);
-app.use('/api/stats', statsRouter);
 
 // 기본 라우터
 app.get('/', (req, res) => {
-  res.send('영수증 OCR 서비스 API 서버');
+  res.send('OS 프로젝트 API 서버');
 });
 
 // 서버 시작

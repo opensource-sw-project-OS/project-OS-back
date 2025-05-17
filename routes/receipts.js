@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/database');
+const db = require('../config/database');
 
 /**
  * @swagger
@@ -17,140 +17,42 @@ const pool = require('../config/database');
  *       type: object
  *       required:
  *         - user_id
- *         - date
+ *         - receipt_date
+ *         - category
  *         - total_amount
  *       properties:
- *         id:
+ *         receipt_id:
  *           type: integer
  *           description: 영수증 고유 ID
  *         user_id:
  *           type: integer
  *           description: 사용자 ID
- *         date:
+ *         receipt_date:
  *           type: string
  *           format: date
  *           description: 영수증 날짜 (YYYY-MM-DD)
+ *         category:
+ *           type: string
+ *           description: 영수증 카테고리
  *         total_amount:
- *           type: number
+ *           type: integer
  *           description: 총 금액
- *         created_at:
+ *         emotion_type:
  *           type: string
- *           format: date-time
- *           description: 생성 시간
- *         updated_at:
+ *           enum: [happy, sad, angry, anxious, neutral, null]
+ *           description: 감정 유형
+ *         emotion_description:
  *           type: string
- *           format: date-time
- *           description: 수정 시간
+ *           description: 감정 설명
  *       example:
- *         id: 1
+ *         receipt_id: 1
  *         user_id: 1
- *         date: "2025-05-12"
+ *         receipt_date: "2023-05-12"
+ *         category: "식비"
  *         total_amount: 14500
- *         created_at: "2025-05-12 00:12:57"
- *         updated_at: "2025-05-12 00:12:57"
+ *         emotion_type: "happy"
+ *         emotion_description: "오늘은 기분이 좋았습니다."
  */
-
-/**
- * @swagger
- * /api/receipts:
- *   get:
- *     summary: 모든 영수증 조회
- *     tags: [Receipts]
- *     responses:
- *       200:
- *         description: 성공적으로 영수증 목록을 반환
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Receipt'
- *       500:
- *         description: 서버 오류
- */
-// 모든 영수증 조회
-router.get('/', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT * FROM receipts');
-    res.json(rows);
-  } catch (error) {
-    console.error('영수증 조회 오류:', error);
-    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
-  }
-});
-
-/**
- * @swagger
- * /api/receipts/date/{date}:
- *   get:
- *     summary: 특정 날짜 이후의 영수증 조회
- *     tags: [Receipts]
- *     parameters:
- *       - in: path
- *         name: date
- *         schema:
- *           type: string
- *           format: date
- *         required: true
- *         description: 조회 시작 날짜 (YYYY-MM-DD)
- *     responses:
- *       200:
- *         description: 성공적으로 영수증 목록을 반환
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Receipt'
- *       500:
- *         description: 서버 오류
- */
-// 특정 날짜 이후의 영수증 조회
-router.get('/date/:date', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT * FROM receipts WHERE date >= ?', [req.params.date]);
-    res.json(rows);
-  } catch (error) {
-    console.error('영수증 조회 오류:', error);
-    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
-  }
-});
-
-/**
- * @swagger
- * /api/receipts/amount/{amount}:
- *   get:
- *     summary: 특정 금액 이상의 영수증 조회
- *     tags: [Receipts]
- *     parameters:
- *       - in: path
- *         name: amount
- *         schema:
- *           type: number
- *         required: true
- *         description: 조회할 최소 금액
- *     responses:
- *       200:
- *         description: 성공적으로 영수증 목록을 반환
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Receipt'
- *       500:
- *         description: 서버 오류
- */
-// 특정 금액 이상의 영수증 조회
-router.get('/amount/:amount', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT * FROM receipts WHERE total_amount >= ?', [req.params.amount]);
-    res.json(rows);
-  } catch (error) {
-    console.error('영수증 조회 오류:', error);
-    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
-  }
-});
 
 /**
  * @swagger
@@ -166,19 +68,30 @@ router.get('/amount/:amount', async (req, res) => {
  *             type: object
  *             required:
  *               - user_id
- *               - date
+ *               - receipt_date
+ *               - category
  *               - total_amount
  *             properties:
  *               user_id:
  *                 type: integer
  *                 description: 사용자 ID
- *               date:
+ *               receipt_date:
  *                 type: string
  *                 format: date
  *                 description: 영수증 날짜 (YYYY-MM-DD)
+ *               category:
+ *                 type: string
+ *                 description: 영수증 카테고리
  *               total_amount:
- *                 type: number
+ *                 type: integer
  *                 description: 총 금액
+ *               emotion_type:
+ *                 type: string
+ *                 enum: [happy, sad, angry, anxious, neutral]
+ *                 description: 감정 유형 (선택사항)
+ *               emotion_description:
+ *                 type: string
+ *                 description: 감정 설명 (선택사항)
  *     responses:
  *       201:
  *         description: 영수증이 성공적으로 추가됨
@@ -187,7 +100,7 @@ router.get('/amount/:amount', async (req, res) => {
  *             schema:
  *               type: object
  *               properties:
- *                 id:
+ *                 receipt_id:
  *                   type: integer
  *                   description: 생성된 영수증의 ID
  *                 message:
@@ -198,23 +111,42 @@ router.get('/amount/:amount', async (req, res) => {
  *       500:
  *         description: 서버 오류
  */
-// 새 영수증 추가
 router.post('/', async (req, res) => {
-  const { user_id, date, total_amount } = req.body;
-  
-  if (!user_id || !date || !total_amount) {
-    return res.status(400).json({ message: '필수 필드가 누락되었습니다.' });
-  }
-  
   try {
-    const [result] = await pool.query(
-      'INSERT INTO receipts (user_id, date, total_amount) VALUES (?, ?, ?)',
-      [user_id, date, total_amount]
+    const { user_id, receipt_date, category, total_amount, emotion_type, emotion_description } = req.body;
+    
+    // 필수 필드 확인
+    if (!user_id || !receipt_date || !category || !total_amount) {
+      return res.status(400).json({ 
+        message: '사용자 ID, 날짜, 카테고리, 총 금액은 필수 필드입니다.'
+      });
+    }
+    
+    // 감정 유형 검증 (감정 유형이 제공된 경우)
+    if (emotion_type) {
+      const validEmotionTypes = ['happy', 'sad', 'angry', 'anxious', 'neutral'];
+      if (!validEmotionTypes.includes(emotion_type)) {
+        return res.status(400).json({
+          message: '유효하지 않은 감정 유형입니다. happy, sad, angry, anxious, neutral 중 하나여야 합니다.'
+        });
+      }
+    }
+    
+    // 영수증 추가 (emotion_type과 emotion_description 포함)
+    const query = `
+      INSERT INTO receipt 
+        (user_id, receipt_date, category, total_amount, emotion_type, emotion_description) 
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    
+    const [result] = await db.query(
+      query,
+      [user_id, receipt_date, category, total_amount, emotion_type || null, emotion_description || null]
     );
     
-    res.status(201).json({ 
-      id: result.insertId,
-      message: '영수증이 성공적으로 추가되었습니다.' 
+    res.status(201).json({
+      receipt_id: result.insertId,
+      message: '영수증이 성공적으로 추가되었습니다.'
     });
   } catch (error) {
     console.error('영수증 추가 오류:', error);
@@ -224,39 +156,52 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /api/receipts/{id}:
+ * /api/receipts/user/{userId}:
  *   get:
- *     summary: 특정 영수증 조회
+ *     summary: 특정 사용자의 모든 영수증 조회
  *     tags: [Receipts]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: userId
  *         schema:
  *           type: integer
  *         required: true
- *         description: 조회할 영수증 ID
+ *         description: 조회할 사용자 ID
  *     responses:
  *       200:
- *         description: 성공적으로 영수증 정보를 반환
+ *         description: 사용자의 영수증 목록을 성공적으로 반환
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Receipt'
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Receipt'
  *       404:
  *         description: 영수증을 찾을 수 없음
  *       500:
  *         description: 서버 오류
  */
-// 특정 영수증 조회
-router.get('/:id', async (req, res) => {
+router.get('/user/:userId', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM receipts WHERE id = ?', [req.params.id]);
+    const userId = req.params.userId;
     
-    if (rows.length === 0) {
-      return res.status(404).json({ message: '영수증을 찾을 수 없습니다.' });
+    // 사용자 ID 유효성 검사
+    if (!userId || isNaN(userId)) {
+      return res.status(400).json({ message: '유효하지 않은 사용자 ID입니다.' });
     }
     
-    res.json(rows[0]);
+    // 해당 사용자의 모든 영수증 조회
+    const [receipts] = await db.query(
+      'SELECT * FROM receipt WHERE user_id = ? ORDER BY receipt_date DESC',
+      [userId]
+    );
+    
+    // 영수증이 없는 경우
+    if (receipts.length === 0) {
+      return res.status(404).json({ message: '해당 사용자의 영수증 내역이 없습니다.' });
+    }
+    
+    res.status(200).json(receipts);
   } catch (error) {
     console.error('영수증 조회 오류:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
@@ -265,114 +210,66 @@ router.get('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /api/receipts/{id}:
- *   put:
- *     summary: 영수증 수정
+ * /api/receipts/user/{userId}/date/{date}:
+ *   get:
+ *     summary: 특정 사용자의 특정 날짜 영수증 조회
  *     tags: [Receipts]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: userId
  *         schema:
  *           type: integer
  *         required: true
- *         description: 수정할 영수증 ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               user_id:
- *                 type: integer
- *                 description: 사용자 ID
- *               date:
- *                 type: string
- *                 format: date
- *                 description: 영수증 날짜 (YYYY-MM-DD)
- *               total_amount:
- *                 type: number
- *                 description: 총 금액
+ *         description: 조회할 사용자 ID
+ *       - in: path
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: true
+ *         description: 조회할 날짜 (YYYY-MM-DD)
  *     responses:
  *       200:
- *         description: 영수증이 성공적으로 수정됨
- *       400:
- *         description: 유효하지 않은 요청 데이터
+ *         description: 사용자의 특정 날짜 영수증 목록을 성공적으로 반환
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Receipt'
  *       404:
  *         description: 영수증을 찾을 수 없음
  *       500:
  *         description: 서버 오류
  */
-// 영수증 수정
-router.put('/:id', async (req, res) => {
-  const { user_id, date, total_amount } = req.body;
-  
-  if (!user_id && !date && !total_amount) {
-    return res.status(400).json({ message: '수정할 필드가 없습니다.' });
-  }
-  
+router.get('/user/:userId/date/:date', async (req, res) => {
   try {
-    // 현재 데이터 가져오기
-    const [rows] = await pool.query('SELECT * FROM receipts WHERE id = ?', [req.params.id]);
+    const userId = req.params.userId;
+    const date = req.params.date;
     
-    if (rows.length === 0) {
-      return res.status(404).json({ message: '영수증을 찾을 수 없습니다.' });
+    // 사용자 ID 및 날짜 유효성 검사
+    if (!userId || isNaN(userId)) {
+      return res.status(400).json({ message: '유효하지 않은 사용자 ID입니다.' });
     }
     
-    const currentData = rows[0];
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ message: '유효하지 않은 날짜 형식입니다. YYYY-MM-DD 형식이어야 합니다.' });
+    }
     
-    // 업데이트할 데이터 준비
-    const updatedData = {
-      user_id: user_id || currentData.user_id,
-      date: date || currentData.date,
-      total_amount: total_amount || currentData.total_amount
-    };
-    
-    await pool.query(
-      'UPDATE receipts SET user_id = ?, date = ?, total_amount = ? WHERE id = ?',
-      [updatedData.user_id, updatedData.date, updatedData.total_amount, req.params.id]
+    // 해당 사용자의 특정 날짜 영수증 조회
+    const [receipts] = await db.query(
+      'SELECT * FROM receipt WHERE user_id = ? AND receipt_date = ?',
+      [userId, date]
     );
     
-    res.json({ message: '영수증이 성공적으로 수정되었습니다.' });
-  } catch (error) {
-    console.error('영수증 수정 오류:', error);
-    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
-  }
-});
-
-/**
- * @swagger
- * /api/receipts/{id}:
- *   delete:
- *     summary: 영수증 삭제
- *     tags: [Receipts]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: 삭제할 영수증 ID
- *     responses:
- *       200:
- *         description: 영수증이 성공적으로 삭제됨
- *       404:
- *         description: 영수증을 찾을 수 없음
- *       500:
- *         description: 서버 오류
- */
-// 영수증 삭제
-router.delete('/:id', async (req, res) => {
-  try {
-    const [result] = await pool.query('DELETE FROM receipts WHERE id = ?', [req.params.id]);
-    
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: '영수증을 찾을 수 없습니다.' });
+    // 영수증이 없는 경우
+    if (receipts.length === 0) {
+      return res.status(404).json({ message: '해당 날짜의 영수증 내역이 없습니다.' });
     }
     
-    res.json({ message: '영수증이 성공적으로 삭제되었습니다.' });
+    res.status(200).json(receipts);
   } catch (error) {
-    console.error('영수증 삭제 오류:', error);
+    console.error('영수증 조회 오류:', error);
     res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
