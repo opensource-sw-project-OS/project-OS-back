@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chart Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h2>감정별 지출</h2>
+  <canvas id="emotionChart" width="600" height="400"></canvas>
+
+  <script>
+    async function drawChart() {
+      const tokenRes = await fetch('http://localhost:3000/api/token');
+      const { token } = await tokenRes.json();
+
+      const res = await fetch('http://localhost:3000/api/graph/emotion', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await res.json();
+      const labels = data.map(d => d.emotion_type);
+      const values = data.map(d => d.total_spent);
+
+      new Chart(document.getElementById('emotionChart'), {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: '총 지출',
+            data: values
+          }]
+        }
+      });
+    }
+
+    drawChart();
+  </script>
+</body>
+</html> 
