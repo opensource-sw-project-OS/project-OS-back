@@ -1,0 +1,131 @@
+<script>
+    let today_date = '2025/05/18' // 이 부분은 오늘의 날짜를 받아와서 기본으로 설정하는 것으로
+
+    let user_token = null; // 토큰 저장 변수 (초기값: null)
+
+    const RestAPI = {
+        baseURL: 'http://localhost:3000',
+
+        // 로그인
+        async login(payload = {}) {
+            try {
+            const res = await fetch(`${this.baseURL}/api/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            console.log('Login 응답:', data);
+
+            if (data.token) {
+                user_token = data.token; // 토큰 저장
+                console.log('Token 저장 완료:', user_token);
+            } else {
+                console.warn('Token이 응답에 없습니다.');
+            }
+
+            return data;
+            } catch (err) {
+            console.error('Login 중 오류 발생:', err);
+            return null;
+            }
+        },
+
+        // 회원가입
+        async signup(payload = {}) {
+            try {
+            const res = await fetch(`${this.baseURL}/api/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            console.log('Signup 응답:', data);
+            return data;
+            } catch (err) {
+            console.error('Signup 중 오류 발생:', err);
+            return null;
+            }
+        },
+
+        // 인증 포함 POST
+        async Post(endpoint = '', payload = {}) {
+            try {
+            const res = await fetch(`${this.baseURL}/api${endpoint}`, {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                Authorization: user_token ? `Bearer ${user_token}` : null
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            console.log('POST 응답:', data);
+            return data;
+            } catch (err) {
+            console.error('POST 요청 오류:', err);
+            return null;
+            }
+        },
+
+        // 인증 포함 GET
+        async Get(endpoint = '') {
+            try {
+            const res = await fetch(`${this.baseURL}/api${endpoint}`, {
+                method: 'GET',
+                headers: {
+                'Content-Type': 'application/json',
+                Authorization: user_token ? `Bearer ${user_token}` : null
+                }
+            });
+
+            const data = await res.json();
+            console.log('GET 응답:', data);
+            return data;
+            } catch (err) {
+            console.error('GET 요청 오류:', err);
+            return null;
+            }
+        }
+    };
+
+    // 사용 예시 - gpt를 돌린 결과이므로, 이러하게 나온다~ 라고 생각해주시면 됩니다.
+    const total_bills = await RestAPI.Get('/graph/emotion');
+
+    if (total_bills.err) {
+        // 에러 핸들링
+        console.error('에러 발생:', total_bills.err);
+    } else {
+
+    // 1. 서버로부터 받은 데이터 처리
+    // 응답 데이터가 배열 형태이므로 map을 사용한 것
+    const labels = total_bills.map(item => item.emotion);
+    const data = total_bills.map(item => item.total);
+
+    // 2. Chart.js 차트 생성
+    const ctx = document.getElementById('emotionChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+        labels: labels,
+        datasets: [{
+            label: '감정별 총 지출',
+            data: data,
+            borderWidth: 1
+        }]
+        },
+        options: {
+        responsive: true,
+        scales: {
+            y: {
+            beginAtZero: true
+            }
+        }
+        }
+    });
+    }
+</script>
+
