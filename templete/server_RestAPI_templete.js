@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const app = express();
+const bcrypt = require('bcrypt');
+
 
 app.use(cors());
 app.use(express.json());
@@ -10,53 +12,53 @@ app.use(express.json());
 const PORT = 3000;
 const JWT_SECRET = 'test-secret-key';
 
-// ÀÌ°Ç ÅÛÇÃ¸´À» À§ÇØ¼­ »ý¼ºÇÑ °ÍÀÔ´Ï´Ù
+// ì´ê±´ í…œí”Œë¦¿ì„ ìœ„í•´ì„œ ìƒì„±í•œ ê²ƒìž…ë‹ˆë‹¤
 /*
-    Userid °¡ Á» º¹ÀâÇÕ´Ï´Ù.
-    Á¤È®È÷´Â È¸¿ø°¡ÀÔ°ú ·Î±×ÀÎ °úÁ¤¿¡¼­ÀÇ ¾²ÀÓ°ú, ÀÎÁõ ÀÌÈÄÀÇ ¾²ÀÓÀÌ Á» ´Ù¸¨´Ï´Ù.
+    Userid ê°€ ì¢€ ë³µìž¡í•©ë‹ˆë‹¤.
+    ì •í™•ížˆëŠ” íšŒì›ê°€ìž…ê³¼ ë¡œê·¸ì¸ ê³¼ì •ì—ì„œì˜ ì“°ìž„ê³¼, ì¸ì¦ ì´í›„ì˜ ì“°ìž„ì´ ì¢€ ë‹¤ë¦…ë‹ˆë‹¤.
 
-    È¸¿ø°¡ÀÔ°ú ·Î±×ÀÎÀ» ÇÒ ¶© »ç¿ëÀÚ°¡ ÀÔ·ÂÇÑ User IDÀÇ ¹®ÀÚ¿­ÀÌ ´ã±é´Ï´Ù.
-    È¸¿ø°¡ÀÔ¿¡¼­ µ¥ÀÌÅÍ¸¦ µî·ÏÇÒ ¶§ Userid ÇÁ·ÎÆÛÆ¼ °ªÀº 'username' ÄÃ·³ÀÇ °ª°ú ºñ±³ÇÏ°Ô µË´Ï´Ù.
+    íšŒì›ê°€ìž…ê³¼ ë¡œê·¸ì¸ì„ í•  ë• ì‚¬ìš©ìžê°€ ìž…ë ¥í•œ User IDì˜ ë¬¸ìžì—´ì´ ë‹´ê¹ë‹ˆë‹¤.
+    íšŒì›ê°€ìž…ì—ì„œ ë°ì´í„°ë¥¼ ë“±ë¡í•  ë•Œ Userid í”„ë¡œí¼í‹° ê°’ì€ 'username' ì»¬ëŸ¼ì˜ ê°’ê³¼ ë¹„êµí•˜ê²Œ ë©ë‹ˆë‹¤.
 
-    ¼­¹ö´Â token¿¡ ÇØ´ç ÇÁ·ÎÆÛÆ¼·Î user Å×ÀÌºíÀÇ INT Çü pk °ªÀ» ÀúÀåÇÕ´Ï´Ù.
+    ì„œë²„ëŠ” tokenì— í•´ë‹¹ í”„ë¡œí¼í‹°ë¡œ user í…Œì´ë¸”ì˜ INT í˜• pk ê°’ì„ ì €ìž¥í•©ë‹ˆë‹¤.
 
-    ·Î±×ÀÎ ÀÌÈÄÀÇ Åë½Å¿¡¼­´Â token¿¡ ÀúÀåµÈ INT µ¥ÀÌÅÍ¸¦ ¹ÙÅÁÀ¸·Î 
-    Äõ¸®¹®ÀÇ user Å×ÀÌºí¿¡¼­ °ªÀ» Ã£´Â °ÍÀ¸·Î »ç¿ëÇÕ´Ï´Ù.
+    ë¡œê·¸ì¸ ì´í›„ì˜ í†µì‹ ì—ì„œëŠ” tokenì— ì €ìž¥ëœ INT ë°ì´í„°ë¥¼ ë°”íƒ•ìœ¼ë¡œ 
+    ì¿¼ë¦¬ë¬¸ì˜ user í…Œì´ë¸”ì—ì„œ ê°’ì„ ì°¾ëŠ” ê²ƒìœ¼ë¡œ ì‚¬ìš©í•©ë‹ˆë‹¤.
 
 */
 res_json = {
-  Userid : null, //»ç¿ëÀÚ id
-  Userpassword : null, // »ç¿ëÀÚ password 
+  Userid : null, //ì‚¬ìš©ìž id
+  Userpassword : null, // ì‚¬ìš©ìž password 
   
-  data : null, // ±×¿Ü µ¥ÀÌÅÍ (base64 ÄÚµå µî)
-  token : null, // token Á¤º¸
-  err : null, // ¿¡·¯ À¯¹« ÀúÀå (¿¡·¯°¡ ¾øÀ¸¸é null, ¿¡·¯°¡ ÀÖÀ¸¸é ÇØ´ç »çÀ¯)
+  data : null, // ê·¸ì™¸ ë°ì´í„° (base64 ì½”ë“œ ë“±)
+  token : null, // token ì •ë³´
+  err : null, // ì—ëŸ¬ ìœ ë¬´ ì €ìž¥ (ì—ëŸ¬ê°€ ì—†ìœ¼ë©´ null, ì—ëŸ¬ê°€ ìžˆìœ¼ë©´ í•´ë‹¹ ì‚¬ìœ )
   
-  date : null, // ³¯Â¥ -> '´ÜÀÏ ³¯Â¥' or '±â°£'[½ÃÀÛ, ³¡] 
-  total : null, // ÃÑ ÁöÃâ ±Ý¾×
-  category : null, // Ä«Å×°í¸®
+  date : null, // ë‚ ì§œ -> 'ë‹¨ì¼ ë‚ ì§œ' or 'ê¸°ê°„'[ì‹œìž‘, ë] 
+  total : null, // ì´ ì§€ì¶œ ê¸ˆì•¡
+  category : null, // ì¹´í…Œê³ ë¦¬
   
-  emotion : null, // °¨Á¤ Å¸ÀÔ(Á¾·ù)
-  emotion_string : null, // °¨Á¤ ¹®Àå(»ç¿ëÀÚ ÀÔ·Â ¹®Àå)
-  emotion_response : null // À§·Î ¹®Àå(ÀÓ½Ã ¸íÄª)
+  emotion : null, // ê°ì • íƒ€ìž…(ì¢…ë¥˜)
+  emotion_string : null, // ê°ì • ë¬¸ìž¥(ì‚¬ìš©ìž ìž…ë ¥ ë¬¸ìž¥)
+  emotion_response : null // ìœ„ë¡œ ë¬¸ìž¥(ìž„ì‹œ ëª…ì¹­)
 }
 
-// MySQL ¿¬°á
+// MySQL ì—°ê²°
 const db = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  password: 'tkddnjs7201@', // ¡ç º»ÀÎ MySQL ºñ¹Ð¹øÈ£·Î º¯°æ
+  password: 'tkddnjs7201@', // â† ë³¸ì¸ MySQL ë¹„ë°€ë²ˆí˜¸ë¡œ ë³€ê²½
   database: 'receipt_app'
 });
 
-// ÅäÅ« ÀÎÁõ ¹Ìµé¿þ¾î
+// í† í° ì¸ì¦ ë¯¸ë“¤ì›¨ì–´
 function authenticateToken(req, res, next) {
   const token = req.headers['authorization']?.split(' ')[1];
-  if (!token) return res.status(401).json({ err: 'ÅäÅ« ¾øÀ½' });
+  if (!token) return res.status(401).json({ err: 'í† í° ì—†ìŒ' });
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // À¯Àú¿¡ decoded°¡ ÀúÀåµÊ -> token¿¡ µé¾îÀÖ´ø Userid°¡ ÀÚµ¿À¸·Î ÇÒ´çµÊ
+    req.user = decoded; // ìœ ì €ì— decodedê°€ ì €ìž¥ë¨ -> tokenì— ë“¤ì–´ìžˆë˜ Useridê°€ ìžë™ìœ¼ë¡œ í• ë‹¹ë¨
     next();
   } catch (err) {
     res.status(403).json({ err });
@@ -64,50 +66,50 @@ function authenticateToken(req, res, next) {
 }
 
 //----------------------------------------------------------------------------------//
-// È¸¿ø°¡ÀÔ
+// íšŒì›ê°€ìž…
 app.post('/api/signup', async (req, res) => {
   const { Userid, Userpassword } = req.body;
 
   if (!Userid || !Userpassword) {
-    return res.json({ err: '¾ÆÀÌµð¿Í ºñ¹Ð¹øÈ£°¡ ¸ðµÎ ÇÊ¿äÇÕ´Ï´Ù.' });
+    return res.json({ err: 'ì•„ì´ë””ì™€ ë¹„ë°€ë²ˆí˜¸ê°€ ëª¨ë‘ í•„ìš”í•©ë‹ˆë‹¤.' });
   }
 
   try {
     const [rows] = await db.execute('SELECT * FROM user WHERE username = ?', [Userid]);
     if (rows.length > 0) {
-      return res.json({ err: 'ÀÌ¹Ì Á¸ÀçÇÏ´Â »ç¿ëÀÚÀÔ´Ï´Ù.' });
+      return res.json({ err: 'ì´ë¯¸ ì¡´ìž¬í•˜ëŠ” ì‚¬ìš©ìžìž…ë‹ˆë‹¤.' });
     }
 
     const hashedPassword = await bcrypt.hash(Userpassword, 10);
 
-    // ÇØ´ç Äõ¸®¹®Àº ½ÇÁ¦·Î µ¿ÀÛÇÏ´ÂÁö È®ÀÎÇÒ °Í
+    // í•´ë‹¹ ì¿¼ë¦¬ë¬¸ì€ ì‹¤ì œë¡œ ë™ìž‘í•˜ëŠ”ì§€ í™•ì¸í•  ê²ƒ
     await db.execute('INSERT INTO user (username, password) VALUES (?, ?)', [Userid, hashedPassword]);
 
     res.json({ err: null });
   } catch (error) {
     console.error(error);
-    res.json({ err: '¼­¹ö ¿À·ù°¡ ¹ß»ýÇß½À´Ï´Ù.' });
+    res.json({ err: 'ì„œë²„ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.' });
   }
 });
 
-// ·Î±×ÀÎ -  ÅäÅ« Àü´Þ
+// ë¡œê·¸ì¸ -  í† í° ì „ë‹¬
 app.post('/api/login', async (req, res) => {
   const { Userid, Userpassword } = req.body;
 
   if (!Userid || !Userpassword) {
-    return res.json({ err: '¾ÆÀÌµð¿Í ºñ¹Ð¹øÈ£°¡ ÇÊ¿äÇÕ´Ï´Ù.' });
+    return res.json({ err: 'ì•„ì´ë””ì™€ ë¹„ë°€ë²ˆí˜¸ê°€ í•„ìš”í•©ë‹ˆë‹¤.' });
   }
 
   try {
     const [rows] = await db.execute('SELECT * FROM user WHERE username = ?', [Userid]);
     if (rows.length === 0) {
-      return res.json({ err: 'Á¸ÀçÇÏÁö ¾Ê´Â »ç¿ëÀÚÀÔ´Ï´Ù.' });
+      return res.json({ err: 'ì¡´ìž¬í•˜ì§€ ì•ŠëŠ” ì‚¬ìš©ìžìž…ë‹ˆë‹¤.' });
     }
 
     const user = rows[0];
     const match = await bcrypt.compare(Userpassword, user.password);
     if (!match) {
-      return res.json({ err: 'ºñ¹Ð¹øÈ£°¡ Æ²·È½À´Ï´Ù.' });
+      return res.json({ err: 'ë¹„ë°€ë²ˆí˜¸ê°€ í‹€ë ¸ìŠµë‹ˆë‹¤.' });
     }
 
     const token = jwt.sign({ 
@@ -121,23 +123,23 @@ app.post('/api/login', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.json({ err: '¼­¹ö ¿À·ù°¡ ¹ß»ýÇß½À´Ï´Ù.' });
+    res.json({ err: 'ì„œë²„ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.' });
   }
 });
 //----------------------------------------------------------------------------------//
-// OCR + °¨Á¤ ºÐ¼®
+// OCR + ê°ì • ë¶„ì„
 
 //app.post('/api/OCR')
 
-// ÃÖÁ¾ µ¥ÀÌÅÍ Àü´ÞµÊ
+// ìµœì¢… ë°ì´í„° ì „ë‹¬ë¨
 /*
-    Àü´ÞµÈ json µ¥ÀÌÅÍ¿¡ ÀúÀåµÈ °ª
+    ì „ë‹¬ëœ json ë°ì´í„°ì— ì €ìž¥ëœ ê°’
 
-    User id <- Àü´ÞµÈ token¿¡ ÀÇÇØ ÀÚµ¿À¸·Î È®ÀÎ µÊ    
-    date(³¯Â¥)
-    category(Ä«Å×°í¸®)
-    total(ÃÑ ÁöÃâ ±Ý¾×)
-    emotion_string(°¨Á¤ ¹®Àå)
+    User id <- ì „ë‹¬ëœ tokenì— ì˜í•´ ìžë™ìœ¼ë¡œ í™•ì¸ ë¨    
+    date(ë‚ ì§œ)
+    category(ì¹´í…Œê³ ë¦¬)
+    total(ì´ ì§€ì¶œ ê¸ˆì•¡)
+    emotion_string(ê°ì • ë¬¸ìž¥)
 */
 
 app.post('/api/data', authenticateToken, async (req, res) => {
@@ -146,16 +148,16 @@ app.post('/api/data', authenticateToken, async (req, res) => {
     const { date, category, total, emotion_string } = req.body;
 
     if (!date || !category || !total || !emotion_string) {
-      return res.status(400).json({ err: 'ÇÊ¼ö µ¥ÀÌÅÍ ´©¶ô' });
+      return res.status(400).json({ err: 'í•„ìˆ˜ ë°ì´í„° ëˆ„ë½' });
     }
 
     const emotion = emo_analy(emotion_string);
     const emotion_response = emo_string(emotion_string, emotion);
 
-    // DB ÀúÀå
+    // DB ì €ìž¥
     await db.execute(`
-      Å×ÀÌºí¿¡ µ¥ÀÌÅÍ¸¦ ÀúÀåÇÏ´Â Äõ¸®¹®
-    `, [userId, /* ÀûÀýÇÑ º¯¼ö ÀÔ·Â*/ ]);
+      í…Œì´ë¸”ì— ë°ì´í„°ë¥¼ ì €ìž¥í•˜ëŠ” ì¿¼ë¦¬ë¬¸
+    `, [userId, /* ì ì ˆí•œ ë³€ìˆ˜ ìž…ë ¥*/ ]);
 
     res.json({
       err: null,
@@ -163,18 +165,18 @@ app.post('/api/data', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('¿¡·¯ ¹ß»ý:', error);
-    res.status(500).json({ err: '¼­¹ö ³»ºÎ ¿À·ù ¹ß»ý' });
+    console.error('ì—ëŸ¬ ë°œìƒ:', error);
+    res.status(500).json({ err: 'ì„œë²„ ë‚´ë¶€ ì˜¤ë¥˜ ë°œìƒ' });
   }
 });
-// °¨Á¤ ºÐ¼® ÈÄ emotion ¹ÝÈ¯
+// ê°ì • ë¶„ì„ í›„ emotion ë°˜í™˜
 function emo_analy(){}
 
-// °¨Á¤¿¡ µû¸¥ ÀûÀýÇÑ ¹®ÀåÀ» ¹ÝÈ¯
+// ê°ì •ì— ë”°ë¥¸ ì ì ˆí•œ ë¬¸ìž¥ì„ ë°˜í™˜
 function emo_string(){}
 
 //----------------------------------------------------------------------------------//
-// chart.js ¸¦ À§ÇÑ Åë½Å Ã³¸®
+// chart.js ë¥¼ ìœ„í•œ í†µì‹  ì²˜ë¦¬
 app.get('/api/graph/emotion', authenticateToken, async (req, res) => {
   const userId = req.user.Userid;
   const [start, end] = getThisMonthRange();
@@ -192,7 +194,7 @@ app.get('/api/graph/emotion', authenticateToken, async (req, res) => {
     }));
 
     res.json(formatted);
-    // ¹ÝÈ¯ µÇ´Â °ª
+    // ë°˜í™˜ ë˜ëŠ” ê°’
     // [
     //   {
     //     "emotion": "happy",
@@ -211,12 +213,12 @@ app.get('/api/graph/category', authenticateToken, async (req, res) => {
 
   const [rows] = await db.execute(`
 
-    Ä«Å×°í¸®¿¡ ¸Â´Â Äõ¸®¹®
+    ì¹´í…Œê³ ë¦¬ì— ë§žëŠ” ì¿¼ë¦¬ë¬¸
 
   `, [userId, start, end]);
 
     const formatted = rows.map(row => ({
-        // °¢ ÇÁ·ÎÆÛÆ¼ º° µ¥ÀÌÅÍ ÇÒ´çÀº Äõ¸®¹®¿¡¼­ ÃßÃâÇÑ °ª¿¡ ¸Â°Ô º¯°æ
+        // ê° í”„ë¡œí¼í‹° ë³„ ë°ì´í„° í• ë‹¹ì€ ì¿¼ë¦¬ë¬¸ì—ì„œ ì¶”ì¶œí•œ ê°’ì— ë§žê²Œ ë³€ê²½
         category : row.category,
         total : Number(row.total_spent)
     }));
@@ -230,12 +232,12 @@ app.get('/api/graph/daily', authenticateToken, async (req, res) => {
 
   const [rows] = await db.execute(`
 
-    ÀÏº° °¨Á¤ ¹× ÁöÃâ ¿¡ ¸Â´Â Äõ¸®¹®
+    ì¼ë³„ ê°ì • ë° ì§€ì¶œ ì— ë§žëŠ” ì¿¼ë¦¬ë¬¸
 
   `, [userId, start, end]);
 
     const formatted = rows.map(row => ({
-        // °¢ ÇÁ·ÎÆÛÆ¼ º° µ¥ÀÌÅÍ ÇÒ´çÀº Äõ¸®¹®¿¡¼­ ÃßÃâÇÑ °ª¿¡ ¸Â°Ô º¯°æ
+        // ê° í”„ë¡œí¼í‹° ë³„ ë°ì´í„° í• ë‹¹ì€ ì¿¼ë¦¬ë¬¸ì—ì„œ ì¶”ì¶œí•œ ê°’ì— ë§žê²Œ ë³€ê²½
         date : row.date,
         emotion : row.emotion_type,
         total : Number(row.total_spent)
@@ -246,5 +248,5 @@ app.get('/api/graph/daily', authenticateToken, async (req, res) => {
 
 
 app.listen(PORT, () => {
-  console.log(`? ¼­¹ö ½ÇÇà Áß: http://localhost:${PORT}`);
+  console.log(`? ì„œë²„ ì‹¤í–‰ ì¤‘: http://localhost:${PORT}`);
 }); 
