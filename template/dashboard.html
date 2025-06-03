@@ -532,14 +532,17 @@ async function showBudget() {
         });
       }
   
-async function showEmotionDiary() {
+
+
+
+  async function showEmotionDiary() {
   const main = document.getElementById("main");
 
   const today = new Date();
   const end = today.toISOString().split('T')[0];
 
   const past = new Date();
-  past.setDate(today.getDate() - 13); // 오늘 포함 최근 14일
+  past.setDate(today.getDate() - 13); // 최근 14일 범위 조회
   const start = past.toISOString().split('T')[0];
 
   main.innerHTML = `
@@ -595,10 +598,10 @@ async function showEmotionDiary() {
     };
     const emotionCount = {};
 
-     function toKSTDateOnly(dateStr) {
+    function toKSTDateOnly(dateStr) {
       const utc = new Date(dateStr);
       const kst = new Date(utc.getTime() + 9 * 60 * 60 * 1000);
-      return kst.toISOString().slice(0, 10); // YYYY-MM-DD
+      return kst.toISOString().slice(0, 10);
     }
 
     if (!Array.isArray(data) || data.length === 0) {
@@ -607,14 +610,9 @@ async function showEmotionDiary() {
       tbody.innerHTML = "";
 
       data.forEach(entry => {
-const dateOnly = toKSTDateOnly(entry.date);
+        const dateOnly = toKSTDateOnly(entry.date);
         const dateFormatted = dateOnly.slice(5).replace('-', '/');
         const emoji = emotionMap[entry.emotion] || '❓';
-
-        // 감정 카운트 누적
-        if (entry.emotion) {
-          emotionCount[entry.emotion] = (emotionCount[entry.emotion] || 0) + 1;
-        }
 
         tbody.innerHTML += `
           <tr>
@@ -625,53 +623,65 @@ const dateOnly = toKSTDateOnly(entry.date);
         `;
       });
 
-      // 가장 많이 나온 감정 찾기
+      // 🎯 최근 7일 감정만 따로 카운트
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(today.getDate() - 6); // 오늘 포함 7일
+      sevenDaysAgo.setHours(0, 0, 0, 0);
+
+      const last7DaysData = data.filter(entry => {
+        const date = new Date(entry.date);
+        return date >= sevenDaysAgo;
+      });
+
+      last7DaysData.forEach(entry => {
+        if (entry.emotion) {
+          emotionCount[entry.emotion] = (emotionCount[entry.emotion] || 0) + 1;
+        }
+      });
+
       const topEmotion = Object.entries(emotionCount)
         .sort((a, b) => b[1] - a[1])[0]?.[0];
 
-     // 감정별 설정 맵
-const modelConfigMap = {
-  '기쁨':  { file: 'happy.glb',  scale: [20, 20, 20], position: [-45, 0, 0], rotationY: -Math.PI / 2 },
-  '중립':  { file: 'normal.glb',scale: [20,20,20], position: [114, 0, -4.0],rotationY: -Math.PI / 2 },
-  '불안':  { file: 'anxious.glb',  scale: [20, 20, 20], position: [-6, 0, 0], rotationY: -Math.PI / 2 },
-  '슬픔':  { file: 'sad.glb',  scale: [20, 20, 20], position: [-127, 0, -6.0], rotationY: -Math.PI / 2 }, 
-  '분노':  { file: 'angry.glb',scale: [20,20,20], position: [72, 0, -4.0],rotationY: -Math.PI / 2 },
-};
+      // 캐릭터 설정
+      const modelConfigMap = {
+        '기쁨': { file: 'happy.glb', scale: [20, 20, 20], position: [-45, 0, 0], rotationY: -Math.PI / 2 },
+        '중립': { file: 'normal.glb', scale: [20, 20, 20], position: [114, 0, -4.0], rotationY: -Math.PI / 2 },
+        '불안': { file: 'anxious.glb', scale: [20, 20, 20], position: [-6, 0, 0], rotationY: -Math.PI / 2 },
+        '슬픔': { file: 'sad.glb', scale: [20, 20, 20], position: [-127, 0, -6.0], rotationY: -Math.PI / 2 },
+        '분노': { file: 'angry.glb', scale: [20, 20, 20], position: [72, 0, -4.0], rotationY: -Math.PI / 2 },
+      };
 
-const config = modelConfigMap[topEmotion];
+      const config = modelConfigMap[topEmotion];
 
-if (config) {
-  init3D();
-  const loader = new THREE.GLTFLoader();
-  loader.load(`../models/${config.file}`, (gltf) => {
-    if (model) scene.remove(model);
-    model = gltf.scene;
+      if (config) {
+        init3D();
+        const loader = new THREE.GLTFLoader();
+        loader.load(`../models/${config.file}`, (gltf) => {
+          if (model) scene.remove(model);
+          model = gltf.scene;
 
-    model.scale.set(...config.scale);
-    model.position.set(...config.position);
-    model.rotation.y = config.rotationY;
+          model.scale.set(...config.scale);
+          model.position.set(...config.position);
+          model.rotation.y = config.rotationY;
 
-    scene.add(model);
-    });
-  }
+          scene.add(model);
+        });
+      }
 
-  // 긍정 문구 출력 조건 확인 및 삽입
-  const negativeEmotions = ['분노', '불안', '슬픔'];
-  if (negativeEmotions.includes(topEmotion)) {
-    const affirmationBox = document.createElement("div");
-    affirmationBox.className = "glass-box";
-    affirmationBox.id = "affirmationBox";
-    affirmationBox.style.maxWidth = "100%";
-    affirmationBox.style.margin = "10px auto";   
-    affirmationBox.style.display = "block";  
-    affirmationBox.innerHTML = `<p style="font-size: 16px;">긍정 문구를 불러오는 중...</p>`;
-    document.getElementById("calendar-view").appendChild(affirmationBox);
+      // 긍정 문구 삽입
+      const negativeEmotions = ['분노', '불안', '슬픔'];
+      if (negativeEmotions.includes(topEmotion)) {
+        const affirmationBox = document.createElement("div");
+        affirmationBox.className = "glass-box";
+        affirmationBox.id = "affirmationBox";
+        affirmationBox.style.maxWidth = "100%";
+        affirmationBox.style.margin = "10px auto";
+        affirmationBox.style.display = "block";
+        affirmationBox.innerHTML = `<p style="font-size: 16px;">긍정 문구를 불러오는 중...</p>`;
+        document.getElementById("calendar-view").appendChild(affirmationBox);
 
-    loadAffirmation(); // 기존 정의된 긍정 문구 불러오기 함수 호출
-  }
-
-
-
+        loadAffirmation(); // 긍정 문구 불러오기 함수 호출
+      }
     }
   } catch (err) {
     console.error("감정 일기 조회 실패:", err);
@@ -750,7 +760,12 @@ function showSpending() {
         -0.5px -0.5px 0 gray,
          0.5px -0.5px 0 gray,
         -0.5px  0.5px 0 gray,
-         0.5px  0.5px 0 gray; font-weight:bold; font-size:30px">${labels[maxIndex]}</span> 감정에서 지출이 가장 많아요`;
+         0.5px  0.5px 0 gray; font-weight:bold; font-size:30px">${labels[maxIndex]}</span> 감정에서 지출이 가장 많아요<br>
+        <span style="color:${colors[maxIndex]};  text-shadow:
+        -0.5px -0.5px 0 gray,
+         0.5px -0.5px 0 gray,
+        -0.5px  0.5px 0 gray,
+         0.5px  0.5px 0 gray; font-weight:bold; font-size:24px">${labels[maxIndex]}</span> 감정일 때 지출을 주의하세요!`;
       document.querySelector(".glass-box").insertBefore(summary, document.getElementById("spendingChart"));
 
       return new Chart(ctx, {
