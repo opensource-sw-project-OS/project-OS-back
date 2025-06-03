@@ -106,6 +106,41 @@ app.post('/api/graph/daily', authenticateToken, async (req, res) => {
   }
 });
 
+// 지출 및 감정 기록 API
+app.post('/api/receipts', authenticateToken, async (req, res) => {
+  const userId = req.user.user_id; // 인증된 사용자 ID
+  const { receipt_date, category, total_amount, emotion_type, emotion_description } = req.body;
+
+  // 필수 필드 유효성 검사
+  if (!receipt_date || !category || total_amount === undefined) {
+    return res.status(400).json({ message: '날짜, 카테고리, 금액은 필수 입력 항목입니다.' });
+  }
+
+  // total_amount가 유효한 숫자인지 확인
+  if (isNaN(total_amount) || total_amount < 0) {
+      return res.status(400).json({ message: '올바른 금액을 입력해주세요.' });
+  }
+
+  try {
+    // 데이터베이스에 영수증(지출) 정보 삽입
+    const query = `
+      INSERT INTO receipt (user_id, receipt_date, category, total_amount, emotion_type, emotion_description)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    const [result] = await db.execute(
+      query,
+      [userId, receipt_date, category, total_amount, emotion_type || null, emotion_description || null]
+    );
+
+    // 성공 응답
+    res.status(201).json({ message: '지출 및 감정 기록이 성공적으로 저장되었습니다.', receiptId: result.insertId });
+
+  } catch (error) {
+    console.error('지출 기록 저장 오류:', error);
+    res.status(500).json({ message: '지출 기록 저장 중 서버 오류가 발생했습니다.' });
+  }
+});
+
 // 회원가입 API
 app.post('/api/signup', async (req, res) => {
   const { username, password } = req.body;

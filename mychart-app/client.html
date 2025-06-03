@@ -3,41 +3,189 @@
 <head>
   <title>Chart Test</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    canvas {
+      margin-bottom: 40px;
+    }
+  </style>
 </head>
 <body>
-  <h2>감정별 지출</h2>
-  <canvas id="emotionChart" width="600" height="400"></canvas>
+  <h2>감정별 지출 (일별 감정 및 총 지출 데이터)</h2>
+  <canvas id="emotionDailyChart" width="800" height="400"></canvas>
+
+  <h2>카테고리별 총 지출</h2>
+  <canvas id="categoryChart" width="800" height="400"></canvas>
+
+  <h2>일별 지출 및 감정</h2>
+  <canvas id="dailyEmotionChart" width="800" height="400"></canvas>
 
   <script>
-    async function drawChart() {
+    async function fetchWithToken(url) {
       const tokenRes = await fetch('http://localhost:3000/api/token');
       const { token } = await tokenRes.json();
 
-      const res = await fetch('http://localhost:3000/api/graph/emotion', {
+      const res = await fetch(url, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+         // /api/graph/daily 엔드포인트는 바디에 날짜 필요 (예시)
+        body: url.includes('/api/graph/daily') ? JSON.stringify({ target_date: '2025-06-02' }) : undefined // <-- 테스트할 특정 날짜로 변경해주세요
       });
 
-      const data = await res.json();
-      const labels = data.map(d => d.emotion_type);
-      const values = data.map(d => d.total_spent);
+      if (!res.ok) {
+          const error = await res.json();
+          throw new Error(`HTTP error! status: ${res.status} - ${error.message}`);
+      }
 
-      new Chart(document.getElementById('emotionChart'), {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: '총 지출',
-            data: values
-          }]
-        }
-      });
+      return await res.json();
     }
 
-    drawChart();
+    // 감정별 지출 그래프 (일별 감정 및 총 지출 데이터 사용)
+    async function drawEmotionDailyChart() {
+      try {
+        const data = await fetchWithToken('http://localhost:3000/api/graph/emotion');
+
+        // 데이터 구조 확인 및 라벨/값 매핑
+        const labels = data.map(d => `${d.receipt_date} (${d.emotion_type})`);
+        const values = data.map(d => d.total_spent);
+
+        new Chart(document.getElementById('emotionDailyChart'), {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: '총 지출',
+              data: values,
+              backgroundColor: 'rgba(54, 162, 235, 0.6)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: '일별 감정 및 총 지출'
+                }
+            }
+          }
+        });
+      } catch (error) {
+        console.error('감정별/일별 그래프 데이터 가져오기 오류:', error);
+        document.getElementById('emotionDailyChart').innerText = '그래프 데이터를 가져오는 데 실패했습니다.';
+      }
+    }
+
+    // 카테고리별 총 지출 그래프
+    async function drawCategoryChart() {
+      try {
+        const data = await fetchWithToken('http://localhost:3000/api/graph/category');
+
+        const labels = data.map(d => d.category);
+        const values = data.map(d => d.total_spent);
+
+        new Chart(document.getElementById('categoryChart'), {
+          type: 'bar', // 또는 'pie', 'doughnut' 등
+          data: {
+            labels: labels,
+            datasets: [{
+              label: '총 지출',
+              data: values,
+              backgroundColor: [
+                  'rgba(255, 99, 132, 0.6)',
+                  'rgba(54, 162, 235, 0.6)',
+                  'rgba(255, 206, 86, 0.6)',
+                  'rgba(75, 192, 192, 0.6)',
+                  'rgba(153, 102, 255, 0.6)',
+                  'rgba(255, 159, 64, 0.6)'
+              ],
+              borderColor: [
+                  'rgba(255, 99, 132, 1)',
+                  'rgba(54, 162, 235, 1)',
+                  'rgba(255, 206, 86, 1)',
+                  'rgba(75, 192, 192, 1)',
+                  'rgba(153, 102, 255, 1)',
+                  'rgba(255, 159, 64, 1)'
+              ],
+              borderWidth: 1
+            }]
+          },
+          options: {
+              scales: {
+                y: {
+                  beginAtZero: true
+                }
+              },
+              plugins: {
+                  title: {
+                      display: true,
+                      text: '카테고리별 총 지출'
+                  }
+              }
+          }
+        });
+      } catch (error) {
+        console.error('카테고리별 그래프 데이터 가져오기 오류:', error);
+        document.getElementById('categoryChart').innerText = '그래프 데이터를 가져오는 데 실패했습니다.';
+      }
+    }
+
+    // 일별 지출 및 감정 그래프 (특정 날짜 데이터 사용)
+    async function drawDailyEmotionChart() {
+        // /api/graph/daily 엔드포인트는 요청 바디에 target_date 필요
+        // 이 함수에서는 fetchWithToken 내부에서 바디에 날짜를 포함하여 요청
+      try {
+        const data = await fetchWithToken('http://localhost:3000/api/graph/daily'); // fetchWithToken 내부에서 날짜 바디 추가
+
+        // 데이터 구조 확인 및 라벨/값 매핑
+        // daily API는 같은 날짜에 감정이 여러개일 수 있으므로 라벨에 날짜와 감정 모두 표시
+        const labels = data.map(d => `${d.receipt_date} (${d.emotion_type})`);
+        const values = data.map(d => d.total_spent);
+
+        new Chart(document.getElementById('dailyEmotionChart'), {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: '총 지출',
+              data: values,
+              backgroundColor: 'rgba(75, 192, 192, 0.6)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: '특정 날짜(' + (data.length > 0 ? data[0].receipt_date : '-') + ') 일별 감정 및 총 지출'
+                }
+            }
+          }
+        });
+      } catch (error) {
+        console.error('일별 그래프 데이터 가져오기 오류:', error);
+        document.getElementById('dailyEmotionChart').innerText = '그래프 데이터를 가져오는 데 실패했습니다.';
+      }
+    }
+
+    // 페이지 로드 시 모든 그래프 그리기
+    drawEmotionDailyChart();
+    drawCategoryChart();
+    drawDailyEmotionChart();
+
   </script>
 </body>
 </html> 
