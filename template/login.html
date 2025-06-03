@@ -20,6 +20,57 @@
       background: linear-gradient(to bottom, #d7dadd 0%, #c4c9d6 60%, #b0c4db 100%);
     }
 
+
+    header{
+            position: fixed;
+
+            /* 하위요소는 투명도 적용되지 않도록 opacity아닌 rgba */
+            background-color: rgb(255, 255, 255, 0.4);
+
+            /* 화면 너비에 꽉차도록 */
+            width: 100%;    
+
+            /* 갭 없애주기 */
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+
+            /* 그림자 생성 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+            align-items: center;
+            padding:0 150px;
+            /* 지정한 사이즈 내에 padding도 포함 */
+            box-sizing: border-box;
+            
+            display: flex;
+
+            /* 두 요소가 양끝으로 가도록 */
+            justify-content: space-between; 
+        }
+
+    .title{
+            white-space: nowrap;
+            font-size:22px;
+            font-weight: bold;
+        }
+
+    
+    .navigation-menu {
+      flex-shrink: 0; 
+      display: flex;
+      gap: 30px;
+      list-style-type: none;
+    }
+
+    .navigation-menu a {
+      text-decoration: none;
+      font-weight: bold;
+      color: black;
+      cursor: pointer;
+    }
+    
     .auth-box {
       width: 350px;
       padding: 30px;
@@ -80,6 +131,12 @@
   </style>
 </head>
 <body>
+  <header>
+        <div class="title">Project OS</div>
+            <ul class="navigation-menu">
+              <li><a href="project_os_intro.html">Home</a></li>
+            </ul>
+    </header>
   <div class="auth-box">
     <h2>로그인</h2>
     <form id="loginForm">

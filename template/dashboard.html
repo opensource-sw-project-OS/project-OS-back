@@ -30,7 +30,7 @@
             display: flex;
 
             /* 두 요소가 양끝으로 가도록 */
-            /* justify-content: space-between; */
+            justify-content: space-between; 
         }
 
     .title{
@@ -38,6 +38,22 @@
             font-size:22px;
             font-weight: bold;
         }
+
+    
+    .navigation-menu {
+      flex-shrink: 0; 
+      display: flex;
+      gap: 30px;
+      list-style-type: none;
+    }
+
+    .navigation-menu a {
+      text-decoration: none;
+      font-weight: bold;
+      color: black;
+      cursor: pointer;
+    }
+
     @font-face {
       font-family: 'SUIT';
       font-style: normal;
@@ -203,6 +219,18 @@
     border-left: none;
     border-right: none;
   }
+  #dailyFeelingInput {
+  width: 100%;
+  height: 100px;
+  padding: 12px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  }
+  #affirmationBox {
+    text-align: center;
+  }
+
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="apikey.js"></script>
@@ -226,23 +254,26 @@
   <body>
     <header>
         <div class="title">Project OS</div>
-      
+            <ul class="navigation-menu">
+      <li><a href="project_os_intro.html">Home</a></li>
+      <li><a href="#" onclick="logout()">Logout</a></li>
+    </ul>
     </header>
     <aside class="side-menu">
       <div class="pill-menu" onclick="showReceiptInput()">
-        <img src="image/money2.png" alt="입력"> 입력
+        <img src="https://img.icons8.com/?size=100&id=123771&format=png&color=737373" alt="입력"> 입력
       </div>
       <div class="pill-menu" onclick="showSpending()">
-        <img src="image/graph.png" alt="그래프"> 그래프
+        <img src="https://img.icons8.com/?size=100&id=8322&format=png&color=737373" alt="그래프"> 그래프
       </div>
       <div class="pill-menu" onclick="showBudget()">
-        <img src="image/budget.png" alt="예산"> 예산
+        <img src="https://img.icons8.com/?size=100&id=7985&format=png&color=737373" alt="예산"> 예산
       </div>
       <div class="pill-menu" onclick="showCalendar()">
-        <img src="image/dish.png" alt="달력"> 달력
+        <img src="https://img.icons8.com/?size=100&id=10053&format=png&color=737373" alt="달력"> 달력
       </div>
       <div class="pill-menu" onclick="showEmotionDiary()">
-        <img src="image/emotion.png" alt="다이어리"> 다이어리
+        <img src="https://img.icons8.com/?size=100&id=6UIyI0qTHfth&format=png&color=737373" alt="다이어리"> 다이어리
       </div>
     </aside>
   
@@ -259,6 +290,12 @@
   window.location.href = "login.html";
 }
 
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('Userid');
+    window.location.href = 'project_os_intro.html';
+  }
 
   async function uploadOCRImage(blob) {
     const formData = new FormData();
@@ -296,7 +333,7 @@
       <div class="glass-row-2">
         <div class="glass-col">
           <h3>오늘의 지출을 입력해주세요.</h3>
-          <input type="file" id="upload" accept="image/*" />
+          <input type="file" id="upload" accept="image/*" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;" />
           <img id="preview" style="max-width:100%; display:none;" />
           <img id="croppedResult" style="max-width:100%; display:none;" />
           <div id="ocrResult"></div>
@@ -310,8 +347,8 @@
             <option value="기타">기타</option>
           </select>
           <br><br>
-          <button id="confirmCrop"> 크롭 </button>
-          <button id="runOCR"> OCR 실행 </button>
+          <button id="confirmCrop" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;"> 크롭 </button>
+          <button id="runOCR" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;"> OCR 실행 </button>
 
           <div style="margin-top:20px;">
             <input type="text" id="manualDate" placeholder="날짜 (예: 2025-06-01)" value="${getTodayDate()}" />
@@ -321,8 +358,8 @@
 
         <div class="glass-col">
           <h3>오늘의 감정을 입력해주세요.</h3>
-          <input type="text" id="dailyFeelingInput" placeholder="예: 기쁘다, 힘들었다 등" />
-          <button id="submitBtn">지출 + 감정 전송</button>
+          <input type="text" id="dailyFeelingInput" />
+          <button id="submitBtn" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;">오늘의 기록 저장</button>
           <div id="submitResult"></div>
         </div>
       </div>
@@ -430,36 +467,6 @@
     }
   }
 
-  function submitDailyFeeling() {
-    const input = document.getElementById("dailyFeelingInput").value.trim();
-    const resultBox = document.getElementById("dailyFeelingResult");
-    const affirmationBox = document.getElementById("affirmationBox");
-    const savedMsg = document.getElementById("feelingSavedMessage");
-
-    if (!input) {
-      resultBox.innerText = "감정을 입력해주세요.";
-      affirmationBox.innerHTML = "";
-      savedMsg.innerText = "";
-      return;
-    }
-
-    savedMsg.innerText = "오늘의 감정을 기록했습니다.";
-
-    const negativeEmotions = ["슬픔", "불안", "분노", "우울", "짜증", "힘들"];
-    const isNegative = negativeEmotions.some(emotion => input.includes(emotion));
-
-    if (input.includes("행복") || input.includes("기쁨") || input.includes("좋았")) {
-      resultBox.innerText = "오늘 하루는 행복하셨군요 😊";
-      affirmationBox.innerHTML = "";
-    } else if (isNegative) {
-      resultBox.innerText = "오늘 많이 힘드셨군요 😢 내일은 더 좋아질 거예요.";
-      affirmationBox.innerHTML = `긍정 문구 불러오는 중...`;
-      loadAffirmation();
-    } else {
-      resultBox.innerText = "";
-      affirmationBox.innerHTML = "";
-    }
-  }
 async function showBudget() {
   const main = document.getElementById("main");
 
@@ -644,16 +651,14 @@ function drawChart() {
         });
       }
   
-      async function showEmotionDiary() {
+async function showEmotionDiary() {
   const main = document.getElementById("main");
 
-  // 오늘 날짜
   const today = new Date();
   const end = today.toISOString().split('T')[0];
 
-  // 한 달 전 날짜
   const past = new Date();
-  past.setMonth(today.getMonth() - 1);
+  past.setDate(today.getDate() - 6); // 오늘 포함 최근 7일
   const start = past.toISOString().split('T')[0];
 
   main.innerHTML = `
@@ -682,7 +687,7 @@ function drawChart() {
     </div>
   `;
 
-  const url = `http://localhost:3000/api/emotion-diary/range?userId=${user_id}&start=${start}&end=${end}`;  // 여기 url 정의 꼭 해주세요
+  const url = `http://localhost:3000/api/emotion-diary/range?userId=${user_id}&start=${start}&end=${end}`;
 
   try {
     const res = await fetch(url, {
@@ -700,33 +705,85 @@ function drawChart() {
     }
 
     const tbody = document.querySelector("#diaryTable tbody");
+    const emotionMap = {
+      '기쁨': '😄',
+      '중립': '😐',
+      '불안': '🥶',
+      '슬픔': '😭',
+      '분노': '😡'
+    };
+    const emotionCount = {};
+
     if (!Array.isArray(data) || data.length === 0) {
       tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">감정 일기 데이터가 없습니다.</td></tr>`;
     } else {
       tbody.innerHTML = "";
-      const emotionMap = {
-        '기쁨': '😄',
-        '중립': '😐',
-        '불안': '🥶',
-        '슬픔': '😭',
-        '분노': '😡'
-      };
 
       data.forEach(entry => {
-  // 날짜가 '2025-06-02T15:23:45.000Z' 형식이면 'T' 기준으로 앞부분만 사용
-  const dateOnly = entry.date.includes('T') ? entry.date.split('T')[0] : entry.date;
-  const dateFormatted = dateOnly.slice(5).replace('-', '/'); // MM/DD 형식
+        const dateOnly = entry.date.includes('T') ? entry.date.split('T')[0] : entry.date;
+        const dateFormatted = dateOnly.slice(5).replace('-', '/');
+        const emoji = emotionMap[entry.emotion] || '❓';
 
-  const emoji = emotionMap[entry.emotion] || '❓';
+        // 감정 카운트 누적
+        if (entry.emotion) {
+          emotionCount[entry.emotion] = (emotionCount[entry.emotion] || 0) + 1;
+        }
 
-  tbody.innerHTML += `
-    <tr>
-      <td>${dateFormatted}</td>
-      <td style="font-size:24px;">${emoji}</td>
-      <td>${entry.sentence || ''}</td>
-    </tr>
-  `;
-});
+        tbody.innerHTML += `
+          <tr>
+            <td>${dateFormatted}</td>
+            <td style="font-size:24px;">${emoji}</td>
+            <td>${entry.sentence || ''}</td>
+          </tr>
+        `;
+      });
+
+      // 가장 많이 나온 감정 찾기
+      const topEmotion = Object.entries(emotionCount)
+        .sort((a, b) => b[1] - a[1])[0]?.[0];
+
+     // 감정별 설정 맵
+const modelConfigMap = {
+  '기쁨':  { file: 'happy.glb',  scale: [20, 20, 20], position: [-45, 0, 0], rotationY: -Math.PI / 2 },
+  '중립':  { file: 'normal.glb',scale: [20,20,20], position: [114, 0, -4.0],rotationY: -Math.PI / 2 },
+  '불안':  { file: 'anxious.glb',  scale: [20, 20, 20], position: [-6, 0, 0], rotationY: -Math.PI / 2 },
+  '슬픔':  { file: 'sad.glb',  scale: [20, 20, 20], position: [-127, 0, -6.0], rotationY: -Math.PI / 2 }, 
+  '분노':  { file: 'angry.glb',scale: [20,20,20], position: [72, 0, -4.0],rotationY: -Math.PI / 2 },
+};
+
+const config = modelConfigMap[topEmotion];
+
+if (config) {
+  init3D();
+  const loader = new THREE.GLTFLoader();
+  loader.load(`../models/${config.file}`, (gltf) => {
+    if (model) scene.remove(model);
+    model = gltf.scene;
+
+    model.scale.set(...config.scale);
+    model.position.set(...config.position);
+    model.rotation.y = config.rotationY;
+
+    scene.add(model);
+    });
+  }
+
+  // 긍정 문구 출력 조건 확인 및 삽입
+  const negativeEmotions = ['분노', '불안', '슬픔'];
+  if (negativeEmotions.includes(topEmotion)) {
+    const affirmationBox = document.createElement("div");
+    affirmationBox.className = "glass-box";
+    affirmationBox.id = "affirmationBox";
+    affirmationBox.style.maxWidth = "100%";
+    affirmationBox.style.margin = "10px auto";   
+    affirmationBox.style.display = "block";  
+    affirmationBox.innerHTML = `<p style="font-size: 16px;">긍정 문구를 불러오는 중...</p>`;
+    document.getElementById("calendar-view").appendChild(affirmationBox);
+
+    loadAffirmation(); // 기존 정의된 긍정 문구 불러오기 함수 호출
+  }
+
+
 
     }
   } catch (err) {
@@ -734,8 +791,6 @@ function drawChart() {
     const tbody = document.querySelector("#diaryTable tbody");
     tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>`;
   }
-
-  init3D();  // 기존 3D 함수 실행
 }
 
 
@@ -790,7 +845,9 @@ function showSpending() {
 
       const labels = data.map(d => d.emotion);
       const values = data.map(d => d.total);
-      const colors = ['#f7c873', '#ce6969', '#83A2DB', '#ff7aa2', '#84d9c0'];
+            
+      // 중립 기쁨 불안 분노 슬픔
+      const colors = ['#97C1A9', '#FFE880', '#CBAACB', '#ce6969', '#83A2DB'];
       const total = values.reduce((a, b) => a + b, 0);
       const percents = values.map(v => Math.round((v / total) * 100));
       const maxIndex = values.indexOf(Math.max(...values));
@@ -799,7 +856,11 @@ function showSpending() {
       summary.id = "emotionSummary";
       summary.style.textAlign = "center";
       summary.style.marginBottom = "15px";
-      summary.innerHTML = `최근 한 달 간 <span style="color:${colors[maxIndex]}; font-weight:bold; font-size:30px">${labels[maxIndex]}</span> 감정에서 지출이 가장 많아요`;
+      summary.innerHTML = `최근 한 달 간 <span style="color:${colors[maxIndex]};  text-shadow:
+        -0.5px -0.5px 0 gray,
+         0.5px -0.5px 0 gray,
+        -0.5px  0.5px 0 gray,
+         0.5px  0.5px 0 gray; font-weight:bold; font-size:30px">${labels[maxIndex]}</span> 감정에서 지출이 가장 많아요`;
       document.querySelector(".glass-box").insertBefore(summary, document.getElementById("spendingChart"));
 
       return new Chart(ctx, {
@@ -1081,9 +1142,9 @@ async function drawDailyEmotionChart(ctx) {
 
       // 크기와 위치 조정
       model.scale.set(0.06,0.06,0.06);   // 캐릭터 사이즈 조절
-      model.position.set(0, -20, 0);   // 아래로
+      model.position.set(0, 0, 0);   // 아래로
 
-      model.rotation.y = 0; // 캐릭터가 앞을 보도록
+      model.rotation.y = Math.PI / 2; // 캐릭터가 앞을 보도록
 
       // 모델 내부 구조 확인
       model.traverse((child) => {
@@ -1098,22 +1159,6 @@ async function drawDailyEmotionChart(ctx) {
       console.log("모델 씬에 추가");
       });
 
-    // // 감정에 따라 긍정 문구 박스를 보여주기
-    //   const negativeEmotions = ['슬픔', '분노', '불안'];
-    //   if (negativeEmotions.includes(input)) {
-    //     document.getElementById("affirmationBox").style.display = "block";
-
-    //     document.getElementById("affirmationBox").innerHTML = `
-    //       <div class="glass-box" id="affirmationBox" style="width: 100%; style="max-width: 800px;">
-    //         긍정 문구 불러오는 중...
-    //       </div>
-    //   `;
-
-    //     loadAffirmation();
-    //   } else {
-    //     document.getElementById("affirmationBox").style.display = "none";
-    //     document.getElementById("affirmationBox").innerHTML = '';
-    //   }
 
 
 
@@ -1121,89 +1166,11 @@ async function drawDailyEmotionChart(ctx) {
 
     function animate() {
       requestAnimationFrame(animate);
-      if (model) model.rotation.y += 0.005;  // 천천히 회전
+      // if (model) model.rotation.y += 0.005;  // 천천히 회전
       if (controls) controls.update();  // 마우스 회전 적용
 
       renderer.render(scene, camera);
     }
-
-
-    // function loadAffirmation() {
-    //   fetch("https://cors-anywhere.herokuapp.com/https://zenquotes.io/api/random")
-    //     .then(res => res.json())
-    //     .then(data => {
-    //       const quote = data[0].q;
-    //       const author = data[0].a;
-    //       document.getElementById("affirmationBox").innerHTML = `
-    //         <h2>오늘의 긍정 문구 🌼</h2>
-    //         <p style="font-size:18px;">"${quote}"</p>
-    //         <p style="font-size:14px;color:gray;">— ${author}</p>
-    //       `;
-    //     })
-    //     .catch(err => {
-    //       document.getElementById("affirmationBox").innerHTML = `<p>긍정 문구를 불러오지 못했습니다.</p>`;
-    //     });
-    // }
-
-
-    // // affirmation.js
-    // async function loadAffirmation() {
-    //   try {
-    //     const res = await fetch("https://cors-anywhere.herokuapp.com/https://www.affirmations.dev/");
-    //     if (!res.ok) throw new Error("리소스 요청 실패");
-
-    //     const data = await res.json();
-    //     const quote = data.affirmation;
-
-    //     document.getElementById("affirmationBox").innerHTML = `
-    //       <h2>오늘의 긍정 문구 🌼</h2>
-    //       <p style="font-size:18px;">"${quote}"</p>
-    //     `;
-    //   } catch (err) {
-    //     document.getElementById("affirmationBox").innerHTML = `<p>긍정 문구를 불러오지 못했습니다.</p>`;
-    //     console.error("오류 발생:", err);
-    //   }
-    // }
-
-
-    //     async function loadAffirmation() {
-//   try {
-//     // 1. 긍정 문구 가져오기 (영어)
-//     const res = await fetch("https://cors-anywhere.herokuapp.com/https://www.affirmations.dev/");
-//     if (!res.ok) throw new Error("리소스 요청 실패");
-
-//     const data = await res.json();
-//     const quote = data.affirmation;
-
-//     // 2. 영어 문구를 한국어로 번역 (LibreTranslate API 사용)
-//     const translateRes = await fetch("https://cors-anywhere.herokuapp.com/https://libretranslate.de/translate", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json"
-//       },
-//       body: JSON.stringify({
-//         q: quote,
-//         source: "en",
-//         target: "ko",
-//         format: "text"
-//       })
-//     });
-
-//     const translatedData = await translateRes.json();
-//     const translated = translatedData.translatedText;
-
-//     // 3. HTML에 출력
-//     document.getElementById("affirmationBox").innerHTML = `
-//       <h2>오늘의 긍정 문구 🌼</h2>
-//       <p style="font-size:18px;">"${quote}"</p>
-//       <p style="font-size:14px; color:gray;">→ ${translated}</p>
-//     `;
-//   } catch (err) {
-//     document.getElementById("affirmationBox").innerHTML = `<p>긍정 문구를 불러오지 못했습니다.</p>`;
-//     console.error("오류 발생:", err);
-//   }
-// }
-
 
 
 

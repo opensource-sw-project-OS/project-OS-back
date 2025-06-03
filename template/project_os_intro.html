@@ -1,178 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <style>
-        header{
-            position: fixed;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    header {
+      position: fixed;
+      background-color: rgba(255, 255, 255, 0.8);
+      width: 100%;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      align-items: center;
+      padding: 0 150px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: space-between;
+    }
 
-            /* 하위요소는 투명도 적용되지 않도록 opacity아닌 rgba */
-            background-color: rgb(255, 255, 255, 0.8);
+    .title {
+      white-space: nowrap;
+      font-size: 20px;
+      font-weight: bold;
+    }
 
-            /* 화면 너비에 꽉차도록 */
-            width: 100%;    
+    .navigation-menu {
+      flex-shrink: 0; 
+      display: flex;
+      gap: 30px;
+      list-style-type: none;
+    }
 
-            /* 갭 없애주기 */
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 70px;
+    .navigation-menu a {
+      text-decoration: none;
+      font-weight: bold;
+      color: black;
+      cursor: pointer;
+    }
 
-            /* 그림자 생성 */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    .greeting {
+      text-align: center;
+      margin-top: 100px;
+      padding: 40px;
+    }
 
-            align-items: center;
-            padding:0 150px;
-            /* 지정한 사이즈 내에 padding도 포함 */
-            box-sizing: border-box;
-            
-            display: flex;
+    .greet h1 {
+      font-size: 150px;
+      font-weight: 650;
+      margin: 0; 
+    }
 
-            /* 두 요소가 양끝으로 가도록 */
-            justify-content: space-between;
-        }
+    .greet button {
+      margin-top: 200px;
+      width:200px;
+      padding: 12px 28px;
+      background-color: black;
+      color: white;
+      border: none;
+      border-radius: 9999px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
-        .title{
-            white-space: nowrap;
-            font-size:20px;
-            font-weight: bold;
-        }
-        .navigation-menu{
-            /* /* white-space: nowrap; */
+    .greet button:hover {
+      background-color: #333;
+    }
 
-            /* 화면이 줄어도 크기 유지 */
-            flex-shrink: 0; 
-            /* 가로 정렬 */
-            display: flex;
-            
-            gap: 30px;
-            /* 점 없애기 */
-            list-style-type: none;
-
-            
-
-        }
-        .greeting{
-            text-align: center;
-            /* background-color:lemonchiffon;  */
-         
-            margin-top: 60px;
-            padding: 40px;
-        }
-        .greet h1{
-            font-size: 150px;
-            font-weight: 650;
-            /* 마진을 자동으로 줘서 없애줘야함 */
-            margin: 0; 
-            
-        } 
-
-
-         /* 소개 */
-        .introduction-image img{
-          	width: 100%;       /* 가로 100% */
-		    height: auto;      /* 세로는 비율에 맞게 자동 조정 */
-		    display: block;    /* 하단 여백 제거 */
-	    }
-
-
-        
-        
-        
-   
-
-    </style>
+  </style>
 </head>
 <body>
-    <header>
-        <div class="title">Project OS</div>
-        <ul class ="navigation-menu">
-            <li><a class="navigation" move-section=".greeting">Home</a></li>
-            <li><a class="navigation" move-section=".introduction">Introduction</a></li>
-            <li><a class="navigation" move-section=".dashboard">Dashboard</a></li>
+  <header>
+    <div class="title">Project OS</div>
+    <ul class="navigation-menu">
+      <li><a class="navigation" move-section=".greeting">Home</a></li>
+      <li><a href="login.html">Login</a></li> 
+      <li><a href="dashboard.html">Dashboard</a></li> 
+    </ul>
+  </header>
 
-          </ul>
-    </header>
-    <section class="greeting">
-        <div class="greet">
-            <h1>Project OS<h1>
-        </div>
-    </section>
-    <section class="introduction">
-        <div class="introduction-image">
-         <img src="https://cdn-jklip.nitrocdn.com/safSuIdqgDlBkQZOuiEFYetySutVuoYj/assets/images/optimized/rev-b11dceb/happay.com/blog/wp-content/uploads/sites/12/2023/07/financial-analysis-1024x633.webp">
-         </div>
-    </section>
-    <!-- <section class="spending">
-            <div class="spending-title">Spending</div>
-            <div class="spendings">
-                <div class="spending-detail">
-                    <h3>spending 1</h3>
-                    <p>spending 1 설명</p>
-                </div>
-                <div class="spending-detail">
-                    <h3>spending 2</h3>
-                    <p>spending 2 설명</p>
-                </div>
-                <div class="spending-detail">
-                    <h3>spending 3</h3>
-                    <p>spending 3 설명</p>
-                </div>
-            </div>
-    
-
-    </section>
-       <section class="emotion">
-            <div class="emotion-title">Emotion</div>
-            <div class="emotions">
-                <div class="emotion-detail">
-                    <h3>emotion 1</h3>
-                    <p>emotion 1 설명</p>
-                </div>
-                <div class="emotion-detail">
-                    <h3>emotion 2</h3>
-                    <p>emotion 2 설명</p>
-                </div>
-                <div class="emotion-detail">
-                    <h3>emotion 3</h3>
-                    <p>emotion 3 설명</p>
-                </div>
-            </div>
-    
-
-    </section>
- -->
+  <section class="greeting">
+    <div class="greet">
+      <h1>Project OS</h1>
+      <button onclick="location.href='login.html'">Login</button>
+    </div>
+  </section>
 
 
 
-    <script>
-        // navigation의 모든 요소 가져오기
-        document.querySelectorAll('.navigation').forEach(item => {
-
-            item.addEventListener('click', function (e) {
-
-                //클릭된 item의 move-section 가져옴
-                const move_section = this.getAttribute('move-section');
-                
-                const target = document.querySelector(move_section);
-
-                // target이 존재할 때만
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth', // 스크롤 부드럽게
-                        block: 'start'      // 윗부분이 화면위에 가도록
-                    });
-                }
-            });
-
-        });
-
-        
-    </script>
+  <script>
+    document.querySelectorAll('.navigation').forEach(item => {
+      item.addEventListener('click', function () {
+        const move_section = this.getAttribute('move-section');
+        const target = document.querySelector(move_section);
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+  </script>
 </body>
-
-
-
-
+</html>
