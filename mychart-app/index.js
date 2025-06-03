@@ -50,7 +50,7 @@ function getThisMonthRange() {
 }
 
 // 감정별 지출
-app.post('/api/graph/emotion', authenticateToken, async (req, res) => {
+app.get('/api/graph/emotion', authenticateToken, async (req, res) => {
   const userId = req.user.user_id;
   const [start, end] = getThisMonthRange();
 
@@ -66,7 +66,7 @@ app.post('/api/graph/emotion', authenticateToken, async (req, res) => {
 });
 
 // 카테고리별 총 지출 금액 조회 API
-app.post('/api/graph/category', authenticateToken, async (req, res) => {
+app.get('/api/graph/category', authenticateToken, async (req, res) => {
   const userId = req.user.user_id;
   const [start, end] = getThisMonthRange();
 
@@ -81,7 +81,7 @@ app.post('/api/graph/category', authenticateToken, async (req, res) => {
 });
 
 // 지출 날짜 기반, 감정 및 총 지출 금액 API
-app.post('/api/graph/daily', authenticateToken, async (req, res) => {
+app.get('/api/graph/daily', authenticateToken, async (req, res) => {
   const userId = req.user.user_id;
   const { target_date } = req.body; // 요청 바디에서 target_date를 가져옴
 
