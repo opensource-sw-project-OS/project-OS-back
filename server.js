@@ -16,7 +16,7 @@ const JWT_SECRET = 'test-secret-key';
 const db = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  password: '비밀번호', // ← 본인 비번
+  password: '.', // ← 본인 비번
   database: 'receipt_app'
 });
 
@@ -127,8 +127,11 @@ app.get('/api/graph/emotion', authenticateToken, async (req, res) => {
   const [rows] = await db.execute(`
     SELECT emotion_type, SUM(total_amount) AS total_spent
     FROM receipt
-    WHERE user_id = ? AND receipt_date BETWEEN ? AND ?
+    WHERE user_id = ?
+      AND receipt_date >= ?
+      AND receipt_date <= DATE_ADD(?, INTERVAL 1 DAY)
     GROUP BY emotion_type
+
   `, [userId, start, end]);
 
   const formatted = rows.map(row => ({
@@ -145,8 +148,11 @@ app.get('/api/graph/category', authenticateToken, async (req, res) => {
   const [rows] = await db.execute(`
     SELECT category, SUM(total_amount) AS total_spent
     FROM receipt
-    WHERE user_id = ? AND receipt_date BETWEEN ? AND ?
+    WHERE user_id = ?
+      AND receipt_date >= ?
+      AND receipt_date <= DATE_ADD(?, INTERVAL 1 DAY)
     GROUP BY category
+
   `, [userId, start, end]);
 
   const formatted = rows.map(row => ({
@@ -161,11 +167,14 @@ app.get('/api/graph/daily', authenticateToken, async (req, res) => {
   const userId = req.user.Userid;
   const [start, end] = getThisMonthRange();
   const [rows] = await db.execute(`
-    SELECT receipt_date AS date, emotion_type, SUM(total_amount) AS total_spent
+    SELECT DATE(receipt_date) AS date, emotion_type, SUM(total_amount) AS total_spent
     FROM receipt
-    WHERE user_id = ? AND receipt_date BETWEEN ? AND ?
-    GROUP BY receipt_date, emotion_type
-    ORDER BY receipt_date ASC
+    WHERE user_id = ?
+      AND receipt_date >= ?
+      AND receipt_date <= DATE_ADD(?, INTERVAL 1 DAY)
+    GROUP BY DATE(receipt_date), emotion_type
+    ORDER BY DATE(receipt_date) ASC
+
   `, [userId, start, end]);
 
   const formatted = rows.map(row => ({
@@ -189,9 +198,11 @@ app.get('/api/emotion-diary/range', authenticateToken, async (req, res) => {
 
   try {
     const [rows] = await db.execute(`
-      SELECT receipt_date AS date, emotion_type AS emotion, emotion_description AS sentence
+      SELECT DATE(receipt_date) AS date, emotion_type AS emotion, emotion_description AS sentence
       FROM receipt
-      WHERE user_id = ? AND receipt_date BETWEEN ? AND ?
+      WHERE user_id = ?
+        AND receipt_date >= ? 
+        AND receipt_date <= DATE_ADD(?, INTERVAL 1 DAY)
       ORDER BY receipt_date DESC
     `, [userId, start, end]);
 
@@ -201,4 +212,3 @@ app.get('/api/emotion-diary/range', authenticateToken, async (req, res) => {
     res.status(500).json({ err: "서버 오류 발생" });
   }
 });
-
