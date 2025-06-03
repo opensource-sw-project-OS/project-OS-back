@@ -150,7 +150,7 @@ app.get('/api/graph/category', authenticateToken, async (req, res) => {
     FROM receipt
     WHERE user_id = ?
       AND receipt_date >= ?
-      AND receipt_date <= DATE_ADD(?, INTERVAL 1 DAY)
+      AND receipt_date <= ?
     GROUP BY category
 
   `, [userId, start, end]);
@@ -167,13 +167,16 @@ app.get('/api/graph/daily', authenticateToken, async (req, res) => {
   const userId = req.user.Userid;
   const [start, end] = getThisMonthRange();
   const [rows] = await db.execute(`
-    SELECT DATE(receipt_date) AS date, emotion_type, SUM(total_amount) AS total_spent
+    SELECT 
+      DATE(CONVERT_TZ(receipt_date, '+00:00', '+09:00')) AS date, 
+      emotion_type, 
+      SUM(total_amount) AS total_spent
     FROM receipt
     WHERE user_id = ?
-      AND receipt_date >= ?
-      AND receipt_date <= DATE_ADD(?, INTERVAL 1 DAY)
-    GROUP BY DATE(receipt_date), emotion_type
-    ORDER BY DATE(receipt_date) ASC
+      AND CONVERT_TZ(receipt_date, '+00:00', '+09:00')
+      AND receipt_date >= ? AND receipt_date <= ?
+    GROUP BY date, emotion_type
+    ORDER BY date ASC;
 
   `, [userId, start, end]);
 
