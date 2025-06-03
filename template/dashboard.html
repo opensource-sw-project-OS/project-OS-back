@@ -497,125 +497,6 @@ async function showBudget() {
   window.usedAmount = usedAmount;
 }
 
-function drawChart() {
-  const totalInput = document.getElementById("totalBudget");
-  const usedInput = document.getElementById("usedBudget");
-
-  if (!totalInput || !usedInput) {
-    console.error("예산 입력 필드를 찾을 수 없습니다.");
-    return;
-  }
-
-  const total = parseInt(totalInput.value) || 0;
-  const used = parseInt(usedInput.value) || 0;
-  const remain = total - used;
-
-  const ctx = document.getElementById('budgetChart').getContext('2d');
-  if (window.budgetChartInstance) {
-    window.budgetChartInstance.destroy();
-  }
-
-  window.budgetChartInstance = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['사용한 금액', '남은 금액'],
-      datasets: [{
-        data: [used, remain > 0 ? remain : 0],
-        backgroundColor: ['#CE6969', '#83A2DB'],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            font: {
-              family: 'SUIT',
-              size: 14
-            }
-          }
-        }
-      }
-    }
-  });
-}
-
-//       async function showBudget() {
-//   const main = document.getElementById("main");
-
-//   // 이번 달 사용 금액 서버에서 받아오기
-//   let usedAmount = 0;
-//   try {
-//     const res = await fetch(`http://localhost:3000/api/receipts/usage/month/${user_id}`, {
-//       headers: { Authorization: `Bearer ${user_token}` }
-//     });
-//     const data = await res.json();
-//     usedAmount = data.total_used || 0;
-//   } catch (err) {
-//     console.error("이번 달 사용 금액 조회 실패:", err);
-//   }
-
-//   main.innerHTML = `
-//     <div class="glass-box">
-//       <h2>이번 달 예산</h2>
-//       <p style="font-size: 16px; margin-bottom: 15px;">이번 달 지출 총합: <strong>${usedAmount.toLocaleString()}원</strong></p>
-//       <input type="number" id="totalBudget" placeholder="총 예산 입력 (₩)" style="padding: 5px 16px; margin-bottom: 20px; border-radius: 8px;" />
-//       <button onclick="drawChart()" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;">한눈에 확인</button>
-//       <canvas id="budgetChart" width="300" height="300"></canvas>
-//     </div>
-//   `;
-
-//   // 사용한 금액은 전역변수로 저장해두고 차트 그릴 때 씁니다.
-//   window.usedAmount = usedAmount;
-// }
-
-// function drawChart() {
-//   const totalInput = document.getElementById("totalBudget");
-//   const usedInput = document.getElementById("usedBudget");
-
-//   if (!totalInput || !usedInput) {
-//     console.error("예산 입력 필드를 찾을 수 없습니다.");
-//     return;
-//   }
-
-//   const total = parseInt(totalInput.value);
-//   const used = parseInt(usedInput.value);
-//   const remain = total - used;
-
-//   const ctx = document.getElementById('budgetChart').getContext('2d');
-//   // 기존 차트가 있으면 제거
-//   if (window.budgetChartInstance) {
-//     window.budgetChartInstance.destroy();
-//   }
-
-//   window.budgetChartInstance = new Chart(ctx, {
-//     type: 'doughnut',
-//     data: {
-//       labels: ['사용한 금액', '남은 금액'],
-//       datasets: [{
-//         data: [used, remain > 0 ? remain : 0],
-//         backgroundColor: ['#CE6969', '#83A2DB'],
-//         borderWidth: 1
-//       }]
-//     },
-//     options: {
-//       responsive: true,
-//       plugins: {
-//         legend: {
-//           position: 'bottom',
-//           labels: {
-//             font: {
-//               family: 'SUIT',
-//               size: 14
-//             }
-//           }
-//         }
-//       }
-//     }
-//   });
-// }
 
   
       function drawChart() {
@@ -658,7 +539,7 @@ async function showEmotionDiary() {
   const end = today.toISOString().split('T')[0];
 
   const past = new Date();
-  past.setDate(today.getDate() - 6); // 오늘 포함 최근 7일
+  past.setDate(today.getDate() - 13); // 오늘 포함 최근 14일
   const start = past.toISOString().split('T')[0];
 
   main.innerHTML = `
@@ -714,13 +595,19 @@ async function showEmotionDiary() {
     };
     const emotionCount = {};
 
+     function toKSTDateOnly(dateStr) {
+      const utc = new Date(dateStr);
+      const kst = new Date(utc.getTime() + 9 * 60 * 60 * 1000);
+      return kst.toISOString().slice(0, 10); // YYYY-MM-DD
+    }
+
     if (!Array.isArray(data) || data.length === 0) {
       tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">감정 일기 데이터가 없습니다.</td></tr>`;
     } else {
       tbody.innerHTML = "";
 
       data.forEach(entry => {
-        const dateOnly = entry.date.includes('T') ? entry.date.split('T')[0] : entry.date;
+const dateOnly = toKSTDateOnly(entry.date);
         const dateFormatted = dateOnly.slice(5).replace('-', '/');
         const emoji = emotionMap[entry.emotion] || '❓';
 
@@ -895,27 +782,42 @@ function showSpending() {
       console.error("emotion chart error:", err);
     }
   }
+
 async function drawDailyEmotionChart(ctx) {
   try {
     const res = await fetch("http://localhost:3000/api/graph/daily", {
       headers: { Authorization: `Bearer ${user_token}` }
     });
-    const data = await res.json();
+    const rawData = await res.json();
 
-    // 날짜에서 시간 제거
-    data.forEach(d => {
-      if (typeof d.date === 'string' && d.date.includes('T')) {
-        d.date = d.date.split('T')[0];
+    // KST 기준으로 날짜 보정
+    function toKSTDateOnly(dateStr) {
+      const utc = new Date(dateStr);
+      const kst = new Date(utc.getTime() + 9 * 60 * 60 * 1000);
+      return kst.toISOString().slice(0, 10); // YYYY-MM-DD
+    }
+
+    // 날짜별 총합 계산
+    const dailyTotals = {};
+    rawData.forEach(d => {
+      const date = toKSTDateOnly(d.date);
+      if (!dailyTotals[date]) {
+        dailyTotals[date] = 0;
       }
+      dailyTotals[date] += Number(d.total);
     });
 
+    const dates = Object.keys(dailyTotals).sort();
+    const totals = dates.map(date => dailyTotals[date]);
+
+    // Chart.js 그리기
     return new Chart(ctx, {
       type: 'line',
       data: {
-        labels: data.map(d => d.date),
+        labels: dates,
         datasets: [{
-          label: '일별 감정 지출',
-          data: data.map(d => d.total),
+          label: '일별 총 지출',
+          data: totals,
           fill: false,
           borderColor: '#83A2DB',
           tension: 0.3
@@ -924,11 +826,9 @@ async function drawDailyEmotionChart(ctx) {
       options: {
         plugins: {
           tooltip: {
-            multiLine: true,
             callbacks: {
               label: function (ctx) {
-                const item = data[ctx.dataIndex];
-                return [`날짜: ${item.date}`, `감정: ${item.emotion}`, `지출: ₩${item.total.toLocaleString()}`];
+                return `총 지출: ₩${ctx.raw.toLocaleString()}`;
               }
             }
           },
@@ -939,11 +839,11 @@ async function drawDailyEmotionChart(ctx) {
         }
       }
     });
+
   } catch (err) {
     console.error("daily chart error:", err);
   }
 }
-
 
   async function drawCategoryChart(ctx) {
     try {
