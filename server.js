@@ -226,8 +226,7 @@ app.post('/api/ocr', async (req, res) => {
     try{
       await cvReady;
       let res_Json = {err : null};
-      console.log('✅ /api/ocr 진입');
-      console.log('받은 데이터 길이:', req.body?.data?.length)
+      console.log('✅ /api/ocr 진입  받은 데이터 길이:', req.body?.data?.length);
 
       const base64Data = req.body.data.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
@@ -285,7 +284,6 @@ app.post('/api/ocr', async (req, res) => {
           //logger: m => console.log('[OCR 진행 로그]', m)
         }
       );
-      console.log(text);
       let re = analyzeReceipt(text);
       
       res.json(Object.assign({}, re, res_Json));
@@ -410,9 +408,20 @@ app.post('/api/data', authenticateToken, async (req, res) => {
     if (!date || !category || !total || !emotion_string) {
       return res.status(400).json({ err: '필수 데이터 누락' });
     }
+
+    console.log('✅ /api/data 진입   받은 데이터 :', req.body);
+    const [rows] = await db.execute(`
+      SELECT AVG(total_amount) AS avr
+      FROM receipt
+      WHERE user_id = ?
+        AND receipt_date BETWEEN DATE_SUB(?, INTERVAL 7 DAY) AND ?
+    `, [userId, date, date]);
+
+    const avr = rows[0].avr ?? 0; // null 방지
+
     let temp = {
       data : emotion_string,
-      avr : 50000,
+      avr : parseInt(avr),
       spend : parseInt(total)
     }
     console.log(temp)
@@ -422,10 +431,10 @@ app.post('/api/data', authenticateToken, async (req, res) => {
     //const emotion_response = emo_string(emotion_string, emotion);
 
     await db.execute(`
-      INSERT INTO receipt (user_id, receipt_date, total_amount, emotion_description, category)
-      VALUES (?, ?, ?, ?, ?)
-    `, [userId, date, total, emotion_string, category]);
-    console.log({ emotion, emotion_response })
+      INSERT INTO receipt (user_id, receipt_date, total_amount, emotion_type, emotion_description, category)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `, [userId, date, total, emotion, emotion_string, category]);
+    console.log('✅ db 등록 완료');
     res.json({ err: null, emotion_response });
   } catch (error) {
     console.error('에러 발생:', error);
