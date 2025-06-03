@@ -106,6 +106,74 @@ app.post('/api/graph/daily', authenticateToken, async (req, res) => {
   }
 });
 
+// 회원가입 API
+app.post('/api/signup', async (req, res) => {
+  const { username, password } = req.body;
+
+  // 기본적인 유효성 검사
+  if (!username || !password) {
+    return res.status(400).json({ message: '아이디와 비밀번호를 모두 입력해주세요.' });
+  }
+
+  try {
+    // TODO: 실제 서비스에서는 비밀번호를 반드시 해싱하여 저장해야 합니다!
+    const [result] = await db.execute(
+      'INSERT INTO user (username, password) VALUES (?, ?)',
+      [username, password]
+    );
+
+    // 성공 응답
+    res.status(201).json({ message: '회원가입이 성공적으로 완료되었습니다.', userId: result.insertId });
+
+  } catch (error) {
+    console.error('회원가입 오류:', error);
+
+    // 중복 아이디 오류 감지 (MySQL 오류 코드 1062)
+    if (error.errno === 1062) {
+      return res.status(409).json({ message: '이미 존재하는 아이디입니다.' });
+    }
+
+    // 기타 서버 오류
+    res.status(500).json({ message: '회원가입 중 서버 오류가 발생했습니다.' });
+  }
+});
+
+// 로그인 API
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  // 기본적인 유효성 검사
+  if (!username || !password) {
+    return res.status(400).json({ message: '아이디와 비밀번호를 모두 입력해주세요.' });
+  }
+
+  try {
+    // 1. 데이터베이스에서 사용자 찾기
+    const [users] = await db.execute(
+      'SELECT user_id, username, password FROM user WHERE username = ?',
+      [username]
+    );
+
+    const user = users[0];
+
+    // 2. 사용자 존재 및 비밀번호 확인
+    // TODO: 실제 서비스에서는 비밀번호 해싱 비교 로직이 들어가야 합니다!
+    if (!user || user.password !== password) {
+      return res.status(401).json({ message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+    }
+
+    // 3. JWT 토큰 생성
+    const token = jwt.sign({ user_id: user.user_id }, JWT_SECRET, { expiresIn: '1h' });
+
+    // 4. 성공 응답 (토큰 반환)
+    res.status(200).json({ message: '로그인 성공', token: token });
+
+  } catch (error) {
+    console.error('로그인 오류:', error);
+    res.status(500).json({ message: '로그인 중 서버 오류가 발생했습니다.' });
+  }
+});
+
 // 테스트용 토큰 발급
 app.get('/api/token', (req, res) => {
   const token = jwt.sign({ user_id: 1 }, JWT_SECRET, { expiresIn: '1h' });
