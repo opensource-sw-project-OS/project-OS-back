@@ -280,6 +280,9 @@
     <main class="main-content" id="main"></main>
   
     <script>
+
+
+
         // 로그인된 유저 토큰 및 ID 저장
   let user_token = localStorage.getItem('token');
   let user_id = localStorage.getItem('Userid');
@@ -1126,46 +1129,6 @@ async function perEmotion(ctx) {
 
       animate(); // 애니메이션 시작
     }
-
-    // function loadEmotionModel() {
-    //   const input = document.getElementById("emotionInput").value.trim();
-    //   const map = {
-    //     '행복': 'happy.glb',
-    //     '슬픔': 'sad.glb',
-    //     '불안': 'anxious.glb',
-    //     '분노': 'angry.glb'
-    //   };
-    //   const fileName = map[input];
-    //   if (!fileName) {
-    //     alert("감정은 '행복', '슬픔', '불안', '분노' 중에서 입력해주세요.");
-    //     return;
-    //   }
-
-    //   const loader = new THREE.GLTFLoader();
-    //   loader.load(`models/${fileName}`, (gltf) => {
-    //   if (model) scene.remove(model);
-
-    //   model = gltf.scene;
-
-    //   // 크기와 위치 조정
-    //   model.scale.set(0.06,0.06,0.06);   // 캐릭터 사이즈 조절
-    //   model.position.set(0, 0, 0);   // 아래로
-
-    //   model.rotation.y = Math.PI / 2; // 캐릭터가 앞을 보도록
-
-    //   // 모델 내부 구조 확인
-    //   model.traverse((child) => {
-    //     if (child.isMesh) {
-    //       child.castShadow = true;
-    //       child.receiveShadow = true;
-    //       console.log("Mesh:", child.name);
-    //     }
-    //   });
-
-    //   scene.add(model);
-    //   console.log("모델 씬에 추가");
-    //   });
-
 
 
 
