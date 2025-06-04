@@ -489,3 +489,26 @@ app.get('/api/affirmation', async (req, res) => {
   const data = await response.json();
   res.json(data);
 });
+
+
+app.use(express.static(path.join(__dirname, 'template')));
+
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'template', 'dashboard.html'));
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'template', 'login.html'));
+});
+
+app.get('/signup', (req, res) => {
+  res.sendFile(path.join(__dirname, 'template', 'signup.html'));
+});
+
+// 루트에서 intro 페이지 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'template', 'project_os_intro.html'));
+});
+
+
+app.use('/models', express.static(path.join(__dirname, 'models')));
