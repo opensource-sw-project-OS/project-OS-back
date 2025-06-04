@@ -7,8 +7,7 @@ const receiptsRouter = require('./routes/receipts'); // ← 여기에 주의
 
 const app = express();
 app.use(cors());
-app.use(express.json({limit: '50mb'})) // express로 받아온 json 데이터를 parsing
-app.use(express.urlencoded({extended:true, limit: '50mb'})) // url 정보를 parsing 
+app.use(express.json());
 
 const PORT = 3000;
 const JWT_SECRET = 'test-secret-key';
@@ -17,7 +16,7 @@ const JWT_SECRET = 'test-secret-key';
 const db = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  password: 'qwer1234', // ← 본인 비번
+  password: '.', // ← 본인 비번
   database: 'receipt_app'
 });
 
@@ -79,7 +78,6 @@ app.post('/api/login', async (req, res) => {
 });
 
 
-
 // 그래프용 API
 function getThisMonthRange() {
   const end = new Date(); // 오늘
@@ -121,7 +119,7 @@ app.get('/api/graph/category', authenticateToken, async (req, res) => {
     FROM receipt
     WHERE user_id = ?
       AND receipt_date >= ?
-      AND receipt_date <= DATE_ADD(?, INTERVAL 1 DAY)
+      AND receipt_date <= ?
     GROUP BY category
 
   `, [userId, start, end]);
@@ -138,13 +136,16 @@ app.get('/api/graph/daily', authenticateToken, async (req, res) => {
   const userId = req.user.Userid;
   const [start, end] = getThisMonthRange();
   const [rows] = await db.execute(`
-    SELECT DATE(receipt_date) AS date, emotion_type, SUM(total_amount) AS total_spent
+    SELECT 
+      DATE(CONVERT_TZ(receipt_date, '+00:00', '+09:00')) AS date, 
+      emotion_type, 
+      SUM(total_amount) AS total_spent
     FROM receipt
     WHERE user_id = ?
-      AND receipt_date >= ?
-      AND receipt_date <= DATE_ADD(?, INTERVAL 1 DAY)
-    GROUP BY DATE(receipt_date), emotion_type
-    ORDER BY DATE(receipt_date) ASC
+      AND CONVERT_TZ(receipt_date, '+00:00', '+09:00')
+      AND receipt_date >= ? AND receipt_date <= ?
+    GROUP BY date, emotion_type
+    ORDER BY date ASC;
 
   `, [userId, start, end]);
 
@@ -184,9 +185,6 @@ app.get('/api/emotion-diary/range', authenticateToken, async (req, res) => {
   }
 });
 
-
-
-
 // OCR을 위한 공통 모듈 준비
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
@@ -195,7 +193,6 @@ const { createCanvas, Image, ImageData } = require('canvas');
 const { JSDOM } = require('jsdom');
 const path = require('path');
 
-app.use('/models', express.static(path.join(__dirname, 'models')));
 // 가짜 DOM 설정
 const dom = new JSDOM();
 global.window = dom.window;
@@ -486,3 +483,9 @@ function analyzeText(text) {
   });
 }
 
+// 긍정 문구 불러오기 
+app.get('/api/affirmation', async (req, res) => {
+  const response = await fetch('https://www.affirmations.dev/');
+  const data = await response.json();
+  res.json(data);
+});
