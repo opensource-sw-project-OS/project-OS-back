@@ -278,7 +278,7 @@
     </aside>
   
     <main class="main-content" id="main"></main>
-
+  
     <script>
         // 로그인된 유저 토큰 및 ID 저장
   let user_token = localStorage.getItem('token');
@@ -297,7 +297,8 @@
     window.location.href = 'project_os_intro.html';
   }
 
-  async function POST(endpoint='/',payload={}) {
+
+    async function POST(endpoint='/',payload={}) {
 
     try {
       const res = await fetch(`http://localhost:3000${endpoint}`, {
@@ -325,7 +326,8 @@
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  function showReceiptInput() {
+
+    function showReceiptInput() {
     const main = document.getElementById("main");
     if (!main) return;
 
@@ -444,7 +446,7 @@
 
         const data = await res.json();
         if (!data.err) {
-          resultBox.innerText = `저장 완료: \n\n${data.emotion_response || "처리됨"}`;
+          resultBox.innerText = `저장 완료: ${data.emotion_response || "처리됨"}`;
         } else {
           resultBox.innerText = `에러 발생: ${data.err}`;
         }
@@ -454,6 +456,8 @@
     });
   }
 
+  
+
   function toggleResult() {
     const container = document.getElementById("resultContainer");
     container.style.display = (container.style.display === "none") ? "block" : "none";
@@ -461,7 +465,7 @@
 
   async function loadAffirmation() {
     try {
-      const res = await fetch("https://cors-anywhere.herokuapp.com/https://www.affirmations.dev/");
+      const res = await fetch("http://localhost:3000/api/affirmation");
       if (!res.ok) throw new Error("리소스 요청 실패");
 
       const data = await res.json();
@@ -507,125 +511,6 @@ async function showBudget() {
   window.usedAmount = usedAmount;
 }
 
-function drawChart() {
-  const totalInput = document.getElementById("totalBudget");
-  const usedInput = document.getElementById("usedBudget");
-
-  if (!totalInput || !usedInput) {
-    console.error("예산 입력 필드를 찾을 수 없습니다.");
-    return;
-  }
-
-  const total = parseInt(totalInput.value) || 0;
-  const used = parseInt(usedInput.value) || 0;
-  const remain = total - used;
-
-  const ctx = document.getElementById('budgetChart').getContext('2d');
-  if (window.budgetChartInstance) {
-    window.budgetChartInstance.destroy();
-  }
-
-  window.budgetChartInstance = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['사용한 금액', '남은 금액'],
-      datasets: [{
-        data: [used, remain > 0 ? remain : 0],
-        backgroundColor: ['#CE6969', '#83A2DB'],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            font: {
-              family: 'SUIT',
-              size: 14
-            }
-          }
-        }
-      }
-    }
-  });
-}
-
-//       async function showBudget() {
-//   const main = document.getElementById("main");
-
-//   // 이번 달 사용 금액 서버에서 받아오기
-//   let usedAmount = 0;
-//   try {
-//     const res = await fetch(`http://localhost:3000/api/receipts/usage/month/${user_id}`, {
-//       headers: { Authorization: `Bearer ${user_token}` }
-//     });
-//     const data = await res.json();
-//     usedAmount = data.total_used || 0;
-//   } catch (err) {
-//     console.error("이번 달 사용 금액 조회 실패:", err);
-//   }
-
-//   main.innerHTML = `
-//     <div class="glass-box">
-//       <h2>이번 달 예산</h2>
-//       <p style="font-size: 16px; margin-bottom: 15px;">이번 달 지출 총합: <strong>${usedAmount.toLocaleString()}원</strong></p>
-//       <input type="number" id="totalBudget" placeholder="총 예산 입력 (₩)" style="padding: 5px 16px; margin-bottom: 20px; border-radius: 8px;" />
-//       <button onclick="drawChart()" style="margin-top:10px; padding:8px 16px; border:none; background:#83A2DB; color:white; border-radius:8px;">한눈에 확인</button>
-//       <canvas id="budgetChart" width="300" height="300"></canvas>
-//     </div>
-//   `;
-
-//   // 사용한 금액은 전역변수로 저장해두고 차트 그릴 때 씁니다.
-//   window.usedAmount = usedAmount;
-// }
-
-// function drawChart() {
-//   const totalInput = document.getElementById("totalBudget");
-//   const usedInput = document.getElementById("usedBudget");
-
-//   if (!totalInput || !usedInput) {
-//     console.error("예산 입력 필드를 찾을 수 없습니다.");
-//     return;
-//   }
-
-//   const total = parseInt(totalInput.value);
-//   const used = parseInt(usedInput.value);
-//   const remain = total - used;
-
-//   const ctx = document.getElementById('budgetChart').getContext('2d');
-//   // 기존 차트가 있으면 제거
-//   if (window.budgetChartInstance) {
-//     window.budgetChartInstance.destroy();
-//   }
-
-//   window.budgetChartInstance = new Chart(ctx, {
-//     type: 'doughnut',
-//     data: {
-//       labels: ['사용한 금액', '남은 금액'],
-//       datasets: [{
-//         data: [used, remain > 0 ? remain : 0],
-//         backgroundColor: ['#CE6969', '#83A2DB'],
-//         borderWidth: 1
-//       }]
-//     },
-//     options: {
-//       responsive: true,
-//       plugins: {
-//         legend: {
-//           position: 'bottom',
-//           labels: {
-//             font: {
-//               family: 'SUIT',
-//               size: 14
-//             }
-//           }
-//         }
-//       }
-//     }
-//   });
-// }
 
   
       function drawChart() {
@@ -661,14 +546,17 @@ function drawChart() {
         });
       }
   
-async function showEmotionDiary() {
+
+
+
+  async function showEmotionDiary() {
   const main = document.getElementById("main");
 
   const today = new Date();
   const end = today.toISOString().split('T')[0];
 
   const past = new Date();
-  past.setDate(today.getDate() - 6); // 오늘 포함 최근 7일
+  past.setDate(today.getDate() - 13); // 최근 14일 범위 조회
   const start = past.toISOString().split('T')[0];
 
   main.innerHTML = `
@@ -700,76 +588,91 @@ async function showEmotionDiary() {
   const url = `http://localhost:3000/api/emotion-diary/range?userId=${user_id}&start=${start}&end=${end}`;
 
   try {
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${user_token}` }
-      });
-      const data = await res.json();
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${user_token}` }
+    });
+    const data = await res.json();
 
-      if (data.err) {
-        if (data.err.name === "TokenExpiredError") {
-          alert("로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
-          window.location.href = "login.html";
-          return;
-        }
-        throw new Error(data.err.message || "서버 에러");
+    if (data.err) {
+      if (data.err.name === "TokenExpiredError") {
+        alert("로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
+        window.location.href = "login.html";
+        return;
       }
+      throw new Error(data.err.message || "서버 에러");
+    }
 
-      const tbody = document.querySelector("#diaryTable tbody");
-      const emotionMap = {
-        '기쁨': '😄',
-        '중립': '😐',
-        '불안': '🥶',
-        '슬픔': '😭',
-        '분노': '😡'
+    const tbody = document.querySelector("#diaryTable tbody");
+    const emotionMap = {
+      '기쁨': '😄',
+      '중립': '😐',
+      '불안': '🥶',
+      '슬픔': '😭',
+      '분노': '😡'
+    };
+    const emotionCount = {};
+
+    function toKSTDateOnly(dateStr) {
+      const utc = new Date(dateStr);
+      const kst = new Date(utc.getTime() + 9 * 60 * 60 * 1000);
+      return kst.toISOString().slice(0, 10);
+    }
+
+    if (!Array.isArray(data) || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">감정 일기 데이터가 없습니다.</td></tr>`;
+    } else {
+      tbody.innerHTML = "";
+
+      data.forEach(entry => {
+        const dateOnly = toKSTDateOnly(entry.date);
+        const dateFormatted = dateOnly.slice(5).replace('-', '/');
+        const emoji = emotionMap[entry.emotion] || '❓';
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${dateFormatted}</td>
+            <td style="font-size:24px;">${emoji}</td>
+            <td>${entry.sentence || ''}</td>
+          </tr>
+        `;
+      });
+
+      // 🎯 최근 7일 감정만 따로 카운트
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(today.getDate() - 6); // 오늘 포함 7일
+      sevenDaysAgo.setHours(0, 0, 0, 0);
+
+      const last7DaysData = data.filter(entry => {
+        const date = new Date(entry.date);
+        return date >= sevenDaysAgo;
+      });
+
+      last7DaysData.forEach(entry => {
+        if (entry.emotion) {
+          emotionCount[entry.emotion] = (emotionCount[entry.emotion] || 0) + 1;
+        }
+      });
+
+      const topEmotion = Object.entries(emotionCount)
+        .sort((a, b) => b[1] - a[1])[0]?.[0];
+
+      // 캐릭터 설정
+      const modelConfigMap = {
+        '기쁨': { file: 'happy.glb', scale: [20, 20, 20], position: [-45, 0, 0], rotationY: -Math.PI / 2 },
+        '중립': { file: 'normal.glb', scale: [20, 20, 20], position: [114, 0, -4.0], rotationY: -Math.PI / 2 },
+        '불안': { file: 'anxious.glb', scale: [20, 20, 20], position: [-6, 0, 0], rotationY: -Math.PI / 2 },
+        '슬픔': { file: 'sad.glb', scale: [20, 20, 20], position: [-127, 0, -6.0], rotationY: -Math.PI / 2 },
+        '분노': { file: 'angry.glb', scale: [20, 20, 20], position: [72, 0, -4.0], rotationY: -Math.PI / 2 },
       };
-      const emotionCount = {};
 
-      if (!Array.isArray(data) || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">감정 일기 데이터가 없습니다.</td></tr>`;
-      } else {
-        tbody.innerHTML = "";
-
-        data.forEach(entry => {
-          const dateOnly = entry.date.includes('T') ? entry.date.split('T')[0] : entry.date;
-          const dateFormatted = dateOnly.slice(5).replace('-', '/');
-          const emoji = emotionMap[entry.emotion] || '❓';
-
-          // 감정 카운트 누적
-          if (entry.emotion) {
-            emotionCount[entry.emotion] = (emotionCount[entry.emotion] || 0) + 1;
-          }
-
-          tbody.innerHTML += `
-            <tr>
-              <td>${dateFormatted}</td>
-              <td style="font-size:24px;">${emoji}</td>
-              <td>${entry.sentence || ''}</td>
-            </tr>
-          `;
-        });
-
-        // 가장 많이 나온 감정 찾기
-        const topEmotion = Object.entries(emotionCount)
-          .sort((a, b) => b[1] - a[1])[0]?.[0];
-
-        // 감정별 설정 맵
-        const modelConfigMap = {
-          '기쁨':  { file: 'happy.glb',  scale: [20, 20, 20], position: [-45, 0, 0], rotationY: -Math.PI / 2 },
-          '중립':  { file: 'normal.glb',scale: [20,20,20], position: [114, 0, -4.0],rotationY: -Math.PI / 2 },
-          '불안':  { file: 'anxious.glb',  scale: [20, 20, 20], position: [-6, 0, 0], rotationY: -Math.PI / 2 },
-          '슬픔':  { file: 'sad.glb',  scale: [20, 20, 20], position: [-127, 0, -6.0], rotationY: -Math.PI / 2 }, 
-          '분노':  { file: 'angry.glb',scale: [20,20,20], position: [72, 0, -4.0],rotationY: -Math.PI / 2 },
-        };
-
-      
       const config = modelConfigMap[topEmotion];
-      
-      if (config) {
 
+      if (config) {
         init3D();
         const loader = new THREE.GLTFLoader();
-        //loader.load(`../models/${config.file}`
+        // loader.load(`../models/${config.file}`, (gltf) => {
         loader.load(`http://localhost:3000/models/${config.file}`, (gltf) => {
+
           if (model) scene.remove(model);
           model = gltf.scene;
 
@@ -778,26 +681,23 @@ async function showEmotionDiary() {
           model.rotation.y = config.rotationY;
 
           scene.add(model);
-          });
+        });
       }
 
-      // 긍정 문구 출력 조건 확인 및 삽입
+      // 긍정 문구 삽입
       const negativeEmotions = ['분노', '불안', '슬픔'];
       if (negativeEmotions.includes(topEmotion)) {
         const affirmationBox = document.createElement("div");
         affirmationBox.className = "glass-box";
         affirmationBox.id = "affirmationBox";
         affirmationBox.style.maxWidth = "100%";
-        affirmationBox.style.margin = "10px auto";   
-        affirmationBox.style.display = "block";  
+        affirmationBox.style.margin = "10px auto";
+        affirmationBox.style.display = "block";
         affirmationBox.innerHTML = `<p style="font-size: 16px;">긍정 문구를 불러오는 중...</p>`;
         document.getElementById("calendar-view").appendChild(affirmationBox);
 
-        loadAffirmation(); // 기존 정의된 긍정 문구 불러오기 함수 호출
+        loadAffirmation(); // 긍정 문구 불러오기 함수 호출
       }
-
-
-
     }
   } catch (err) {
     console.error("감정 일기 조회 실패:", err);
@@ -814,6 +714,7 @@ function showSpending() {
       <select id="chartSelector" style="padding: 8px 16px; margin-bottom: 20px; border-radius: 8px;">
         <option value="emotionTotal">감정별 지출 총액</option>
         <option value="dailyEmotion">일별 감정과 지출</option>
+        <option value="perEmotion">내 감정 확인</option>
         <option value="categoryTotal">카테고리별 지출</option>
       </select>
       <canvas id="spendingChart" height="300"></canvas>
@@ -846,6 +747,8 @@ function showSpending() {
       currentChart = await drawDailyEmotionChart(ctx);
     } else if (selected === "categoryTotal") {
       currentChart = await drawCategoryChart(ctx);
+    } else if (selected === "perEmotion") {
+      currentChart = await perEmotion(ctx);
     }
   }
 
@@ -860,7 +763,7 @@ function showSpending() {
       const values = data.map(d => d.total);
             
       // 중립 기쁨 불안 분노 슬픔
-      const colors = ['#97C1A9', '#FFE880', '#CBAACB', '#ce6969', '#83A2DB'];
+      const colors = ['#97C1A9', '#ce6969', '#CBAACB', '#FFE880', '#83A2DB'];
       const total = values.reduce((a, b) => a + b, 0);
       const percents = values.map(v => Math.round((v / total) * 100));
       const maxIndex = values.indexOf(Math.max(...values));
@@ -873,7 +776,12 @@ function showSpending() {
         -0.5px -0.5px 0 gray,
          0.5px -0.5px 0 gray,
         -0.5px  0.5px 0 gray,
-         0.5px  0.5px 0 gray; font-weight:bold; font-size:30px">${labels[maxIndex]}</span> 감정에서 지출이 가장 많아요`;
+         0.5px  0.5px 0 gray; font-weight:bold; font-size:30px">${labels[maxIndex]}</span> 감정에서 지출이 가장 많아요<br>
+        <span style="color:${colors[maxIndex]};  text-shadow:
+        -0.5px -0.5px 0 gray,
+         0.5px -0.5px 0 gray,
+        -0.5px  0.5px 0 gray,
+         0.5px  0.5px 0 gray; font-weight:bold; font-size:24px">${labels[maxIndex]}</span> 감정일 때 지출을 주의하세요!`;
       document.querySelector(".glass-box").insertBefore(summary, document.getElementById("spendingChart"));
 
       return new Chart(ctx, {
@@ -913,22 +821,38 @@ async function drawDailyEmotionChart(ctx) {
     const res = await fetch("http://localhost:3000/api/graph/daily", {
       headers: { Authorization: `Bearer ${user_token}` }
     });
-    const data = await res.json();
+    const rawData = await res.json();
 
-    // 날짜에서 시간 제거
-    data.forEach(d => {
-      if (typeof d.date === 'string' && d.date.includes('T')) {
-        d.date = d.date.split('T')[0];
+    // 날짜 보정 (UTC → KST)
+    function toKSTDateOnly(dateStr) {
+      const utc = new Date(dateStr);
+      const kst = new Date(utc.getTime() + 9 * 60 * 60 * 1000);
+      return kst.toISOString().slice(0, 10);
+    }
+
+    // 날짜별로 총 지출 및 대표 감정 정리
+    const dailyMap = {}; // { '2025-06-03': { total: 12000, emotion: '기쁨' } }
+    rawData.forEach(d => {
+      const date = toKSTDateOnly(d.date);
+      if (!dailyMap[date]) {
+        dailyMap[date] = { total: 0, emotion: d.emotion };
       }
+      dailyMap[date].total += Number(d.total);
+
+      // 대표 감정을 나중에 더 고도화하려면 여기에 조건 추가 가능
     });
+
+    const dates = Object.keys(dailyMap).sort();
+    const totals = dates.map(date => dailyMap[date].total);
+    const emotions = dates.map(date => dailyMap[date].emotion);
 
     return new Chart(ctx, {
       type: 'line',
       data: {
-        labels: data.map(d => d.date),
+        labels: dates,
         datasets: [{
-          label: '일별 감정 지출',
-          data: data.map(d => d.total),
+          label: '일별 총 지출',
+          data: totals,
           fill: false,
           borderColor: '#83A2DB',
           tension: 0.3
@@ -937,11 +861,17 @@ async function drawDailyEmotionChart(ctx) {
       options: {
         plugins: {
           tooltip: {
-            multiLine: true,
             callbacks: {
               label: function (ctx) {
-                const item = data[ctx.dataIndex];
-                return [`날짜: ${item.date}`, `감정: ${item.emotion}`, `지출: ₩${item.total.toLocaleString()}`];
+                const index = ctx.dataIndex;
+                const emotion = emotions[index];
+                const amount = totals[index];
+                const date = dates[index];
+                return [
+                  `날짜: ${date}`,
+                  `감정: ${emotion}`,
+                  `지출: ₩${amount.toLocaleString()}`
+                ];
               }
             }
           },
@@ -952,6 +882,7 @@ async function drawDailyEmotionChart(ctx) {
         }
       }
     });
+
   } catch (err) {
     console.error("daily chart error:", err);
   }
@@ -989,6 +920,69 @@ async function drawDailyEmotionChart(ctx) {
     } catch (err) {
       console.error("category chart error:", err);
     }
+  }
+}
+async function perEmotion(ctx) {
+  try {
+    const res = await fetch("http://localhost:3000/api/graph/daily", {
+      headers: { Authorization: `Bearer ${user_token}` }
+    });
+    const rawData = await res.json();
+
+    // KST 보정 + 날짜별 감정별 그룹화
+    function toKSTDateOnly(dateStr) {
+      const utc = new Date(dateStr);
+      const kst = new Date(utc.getTime() + 9 * 60 * 60 * 1000);
+      return kst.toISOString().slice(0, 10);
+    }
+
+    // 날짜별 감정별 지출 구조로 만들기
+    const grouped = {}; // { '2025-06-03': { 기쁨: 12000, 슬픔: 3000 } }
+    rawData.forEach(d => {
+      const date = toKSTDateOnly(d.date);
+      if (!grouped[date]) grouped[date] = {};
+      if (!grouped[date][d.emotion]) grouped[date][d.emotion] = 0;
+      grouped[date][d.emotion] += Number(d.total);
+    });
+
+    // 각 감정별로 dataset 구성
+    const emotions = ['기쁨', '슬픔', '분노', '불안', '중립'];
+    const labels = Object.keys(grouped).sort();
+    const datasets = emotions.map(emotion => ({
+      label: emotion,
+      data: labels.map(date => grouped[date][emotion] || 0),
+      fill: false,
+      tension: 0.3
+    }));
+
+    return new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: datasets
+      },
+      options: {
+        plugins: {
+          tooltip: {
+            callbacks: {
+              title: (ctx) => `날짜: ${ctx[0].label}`,
+              label: (ctx) => {
+                const emotion = ctx.dataset.label;
+                const value = ctx.raw;
+                return `감정: ${emotion}, 지출: ₩${value.toLocaleString()}`;
+              }
+            }
+          },
+          legend: { display: true }
+        },
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error("daily chart error:", err);
   }
 }
 
@@ -1133,49 +1127,49 @@ async function drawDailyEmotionChart(ctx) {
       animate(); // 애니메이션 시작
     }
 
-    function loadEmotionModel() {
-      const input = document.getElementById("emotionInput").value.trim();
-      const map = {
-        '행복': 'happy.glb',
-        '슬픔': 'sad.glb',
-        '불안': 'anxious.glb',
-        '분노': 'angry.glb'
-      };
-      const fileName = map[input];
-      if (!fileName) {
-        alert("감정은 '행복', '슬픔', '불안', '분노' 중에서 입력해주세요.");
-        return;
-      }
+    // function loadEmotionModel() {
+    //   const input = document.getElementById("emotionInput").value.trim();
+    //   const map = {
+    //     '행복': 'happy.glb',
+    //     '슬픔': 'sad.glb',
+    //     '불안': 'anxious.glb',
+    //     '분노': 'angry.glb'
+    //   };
+    //   const fileName = map[input];
+    //   if (!fileName) {
+    //     alert("감정은 '행복', '슬픔', '불안', '분노' 중에서 입력해주세요.");
+    //     return;
+    //   }
 
-      const loader = new THREE.GLTFLoader();
-      loader.load(`http://localhost:3000/models/${fileName}`, (gltf) => {
-      if (model) scene.remove(model);
+    //   const loader = new THREE.GLTFLoader();
+    //   loader.load(`models/${fileName}`, (gltf) => {
+    //   if (model) scene.remove(model);
 
-      model = gltf.scene;
+    //   model = gltf.scene;
 
-      // 크기와 위치 조정
-      model.scale.set(0.06,0.06,0.06);   // 캐릭터 사이즈 조절
-      model.position.set(0, 0, 0);   // 아래로
+    //   // 크기와 위치 조정
+    //   model.scale.set(0.06,0.06,0.06);   // 캐릭터 사이즈 조절
+    //   model.position.set(0, 0, 0);   // 아래로
 
-      model.rotation.y = Math.PI / 2; // 캐릭터가 앞을 보도록
+    //   model.rotation.y = Math.PI / 2; // 캐릭터가 앞을 보도록
 
-      // 모델 내부 구조 확인
-      model.traverse((child) => {
-        if (child.isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-          console.log("Mesh:", child.name);
-        }
-      });
+    //   // 모델 내부 구조 확인
+    //   model.traverse((child) => {
+    //     if (child.isMesh) {
+    //       child.castShadow = true;
+    //       child.receiveShadow = true;
+    //       console.log("Mesh:", child.name);
+    //     }
+    //   });
 
-      scene.add(model);
-      console.log("모델 씬에 추가");
-      });
-
-
+    //   scene.add(model);
+    //   console.log("모델 씬에 추가");
+    //   });
 
 
-    }
+
+
+    // }
 
     function animate() {
       requestAnimationFrame(animate);
