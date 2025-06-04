@@ -444,7 +444,7 @@
 
         const data = await res.json();
         if (!data.err) {
-          resultBox.innerText = `저장 완료: ${data.emotion_response || "처리됨"}`;
+          resultBox.innerText = `저장 완료: \n\n${data.emotion_response || "처리됨"}`;
         } else {
           resultBox.innerText = `에러 발생: ${data.err}`;
         }
@@ -700,98 +700,101 @@ async function showEmotionDiary() {
   const url = `http://localhost:3000/api/emotion-diary/range?userId=${user_id}&start=${start}&end=${end}`;
 
   try {
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${user_token}` }
-    });
-    const data = await res.json();
-
-    if (data.err) {
-      if (data.err.name === "TokenExpiredError") {
-        alert("로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
-        window.location.href = "login.html";
-        return;
-      }
-      throw new Error(data.err.message || "서버 에러");
-    }
-
-    const tbody = document.querySelector("#diaryTable tbody");
-    const emotionMap = {
-      '기쁨': '😄',
-      '중립': '😐',
-      '불안': '🥶',
-      '슬픔': '😭',
-      '분노': '😡'
-    };
-    const emotionCount = {};
-
-    if (!Array.isArray(data) || data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">감정 일기 데이터가 없습니다.</td></tr>`;
-    } else {
-      tbody.innerHTML = "";
-
-      data.forEach(entry => {
-        const dateOnly = entry.date.includes('T') ? entry.date.split('T')[0] : entry.date;
-        const dateFormatted = dateOnly.slice(5).replace('-', '/');
-        const emoji = emotionMap[entry.emotion] || '❓';
-
-        // 감정 카운트 누적
-        if (entry.emotion) {
-          emotionCount[entry.emotion] = (emotionCount[entry.emotion] || 0) + 1;
-        }
-
-        tbody.innerHTML += `
-          <tr>
-            <td>${dateFormatted}</td>
-            <td style="font-size:24px;">${emoji}</td>
-            <td>${entry.sentence || ''}</td>
-          </tr>
-        `;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${user_token}` }
       });
+      const data = await res.json();
 
-      // 가장 많이 나온 감정 찾기
-      const topEmotion = Object.entries(emotionCount)
-        .sort((a, b) => b[1] - a[1])[0]?.[0];
+      if (data.err) {
+        if (data.err.name === "TokenExpiredError") {
+          alert("로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
+          window.location.href = "login.html";
+          return;
+        }
+        throw new Error(data.err.message || "서버 에러");
+      }
 
-     // 감정별 설정 맵
-const modelConfigMap = {
-  '기쁨':  { file: 'happy.glb',  scale: [20, 20, 20], position: [-45, 0, 0], rotationY: -Math.PI / 2 },
-  '중립':  { file: 'normal.glb',scale: [20,20,20], position: [114, 0, -4.0],rotationY: -Math.PI / 2 },
-  '불안':  { file: 'anxious.glb',  scale: [20, 20, 20], position: [-6, 0, 0], rotationY: -Math.PI / 2 },
-  '슬픔':  { file: 'sad.glb',  scale: [20, 20, 20], position: [-127, 0, -6.0], rotationY: -Math.PI / 2 }, 
-  '분노':  { file: 'angry.glb',scale: [20,20,20], position: [72, 0, -4.0],rotationY: -Math.PI / 2 },
-};
+      const tbody = document.querySelector("#diaryTable tbody");
+      const emotionMap = {
+        '기쁨': '😄',
+        '중립': '😐',
+        '불안': '🥶',
+        '슬픔': '😭',
+        '분노': '😡'
+      };
+      const emotionCount = {};
 
-const config = modelConfigMap[topEmotion];
+      if (!Array.isArray(data) || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">감정 일기 데이터가 없습니다.</td></tr>`;
+      } else {
+        tbody.innerHTML = "";
 
-if (config) {
-  init3D();
-  const loader = new THREE.GLTFLoader();
-  loader.load(`../models/${config.file}`, (gltf) => {
-    if (model) scene.remove(model);
-    model = gltf.scene;
+        data.forEach(entry => {
+          const dateOnly = entry.date.includes('T') ? entry.date.split('T')[0] : entry.date;
+          const dateFormatted = dateOnly.slice(5).replace('-', '/');
+          const emoji = emotionMap[entry.emotion] || '❓';
 
-    model.scale.set(...config.scale);
-    model.position.set(...config.position);
-    model.rotation.y = config.rotationY;
+          // 감정 카운트 누적
+          if (entry.emotion) {
+            emotionCount[entry.emotion] = (emotionCount[entry.emotion] || 0) + 1;
+          }
 
-    scene.add(model);
-    });
-  }
+          tbody.innerHTML += `
+            <tr>
+              <td>${dateFormatted}</td>
+              <td style="font-size:24px;">${emoji}</td>
+              <td>${entry.sentence || ''}</td>
+            </tr>
+          `;
+        });
 
-  // 긍정 문구 출력 조건 확인 및 삽입
-  const negativeEmotions = ['분노', '불안', '슬픔'];
-  if (negativeEmotions.includes(topEmotion)) {
-    const affirmationBox = document.createElement("div");
-    affirmationBox.className = "glass-box";
-    affirmationBox.id = "affirmationBox";
-    affirmationBox.style.maxWidth = "100%";
-    affirmationBox.style.margin = "10px auto";   
-    affirmationBox.style.display = "block";  
-    affirmationBox.innerHTML = `<p style="font-size: 16px;">긍정 문구를 불러오는 중...</p>`;
-    document.getElementById("calendar-view").appendChild(affirmationBox);
+        // 가장 많이 나온 감정 찾기
+        const topEmotion = Object.entries(emotionCount)
+          .sort((a, b) => b[1] - a[1])[0]?.[0];
 
-    loadAffirmation(); // 기존 정의된 긍정 문구 불러오기 함수 호출
-  }
+        // 감정별 설정 맵
+        const modelConfigMap = {
+          '기쁨':  { file: 'happy.glb',  scale: [20, 20, 20], position: [-45, 0, 0], rotationY: -Math.PI / 2 },
+          '중립':  { file: 'normal.glb',scale: [20,20,20], position: [114, 0, -4.0],rotationY: -Math.PI / 2 },
+          '불안':  { file: 'anxious.glb',  scale: [20, 20, 20], position: [-6, 0, 0], rotationY: -Math.PI / 2 },
+          '슬픔':  { file: 'sad.glb',  scale: [20, 20, 20], position: [-127, 0, -6.0], rotationY: -Math.PI / 2 }, 
+          '분노':  { file: 'angry.glb',scale: [20,20,20], position: [72, 0, -4.0],rotationY: -Math.PI / 2 },
+        };
+
+      
+      const config = modelConfigMap[topEmotion];
+      
+      if (config) {
+
+        init3D();
+        const loader = new THREE.GLTFLoader();
+        //loader.load(`../models/${config.file}`
+        loader.load(`http://localhost:3000/models/${config.file}`, (gltf) => {
+          if (model) scene.remove(model);
+          model = gltf.scene;
+
+          model.scale.set(...config.scale);
+          model.position.set(...config.position);
+          model.rotation.y = config.rotationY;
+
+          scene.add(model);
+          });
+      }
+
+      // 긍정 문구 출력 조건 확인 및 삽입
+      const negativeEmotions = ['분노', '불안', '슬픔'];
+      if (negativeEmotions.includes(topEmotion)) {
+        const affirmationBox = document.createElement("div");
+        affirmationBox.className = "glass-box";
+        affirmationBox.id = "affirmationBox";
+        affirmationBox.style.maxWidth = "100%";
+        affirmationBox.style.margin = "10px auto";   
+        affirmationBox.style.display = "block";  
+        affirmationBox.innerHTML = `<p style="font-size: 16px;">긍정 문구를 불러오는 중...</p>`;
+        document.getElementById("calendar-view").appendChild(affirmationBox);
+
+        loadAffirmation(); // 기존 정의된 긍정 문구 불러오기 함수 호출
+      }
 
 
 
@@ -1145,7 +1148,7 @@ async function drawDailyEmotionChart(ctx) {
       }
 
       const loader = new THREE.GLTFLoader();
-      loader.load(`models/${fileName}`, (gltf) => {
+      loader.load(`http://localhost:3000/models/${fileName}`, (gltf) => {
       if (model) scene.remove(model);
 
       model = gltf.scene;

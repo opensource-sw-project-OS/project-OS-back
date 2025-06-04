@@ -197,6 +197,7 @@ def compose_final_message(emo_type, cause, spend_review, percent):
 
 def wrapping(text="", today_spend = 0, avr_spend = 0) :
     emo_type = classifier(text)[0]['label']
+    #기존의 7가지 라벨을 5가지 라벨 -> 기쁨, 중립, 슬픔, 불안, 분노 로 바꾸는 코드
     if emo_type == "행복":
         emo_type = "기쁨"
     elif emo_type == "당황" :

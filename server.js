@@ -186,6 +186,7 @@ app.get('/api/emotion-diary/range', authenticateToken, async (req, res) => {
 
 
 
+
 // OCR을 위한 공통 모듈 준비
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
@@ -194,6 +195,7 @@ const { createCanvas, Image, ImageData } = require('canvas');
 const { JSDOM } = require('jsdom');
 const path = require('path');
 
+app.use('/models', express.static(path.join(__dirname, 'models')));
 // 가짜 DOM 설정
 const dom = new JSDOM();
 global.window = dom.window;
