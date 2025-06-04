@@ -7,7 +7,7 @@ const receiptsRouter = require('./routes/receipts'); // ← 여기에 주의
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({limit: '50mb'}));// OCR할 데이터가 base64로 전해져오기 때문에, 여유공간 확보 필요
 
 const PORT = 3000;
 const JWT_SECRET = 'test-secret-key';
